@@ -1,21 +1,23 @@
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   AppBar,
-  Toolbar,
-  Typography,
-  Button,
   Box,
-  Avatar,
+  Toolbar,
+  IconButton,
+  Typography,
   Menu,
   MenuItem,
+  Button,
+  Avatar,
 } from '@mui/material';
-import { useState } from 'react';
+import MenuIcon from '@mui/icons-material/Menu';
 
 function Navbar() {
+  const [anchorEl, setAnchorEl] = useState(null);
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = useState(null);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -38,56 +40,62 @@ function Navbar() {
   return (
     <AppBar position="static">
       <Toolbar>
-        <Typography
-          variant="h6"
-          component="div"
-          sx={{ flexGrow: 1, cursor: 'pointer' }}
-          onClick={() => navigate('/')}
+        <IconButton
+          size="large"
+          edge="start"
+          color="inherit"
+          aria-label="menu"
+          sx={{ mr: 2 }}
         >
-          StudyBuddy
+          <MenuIcon />
+        </IconButton>
+        
+        <Typography variant="h6" component={Link} to="/" sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit' }}>
+          Study Buddy
         </Typography>
 
         {currentUser ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Button 
-              color="inherit" 
-              onClick={() => navigate('/dashboard')}
-            >
-              Dashboard
-            </Button>
-            <Avatar
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography sx={{ mr: 2 }}>
+              {currentUser.name || currentUser.email}
+            </Typography>
+            <IconButton
+              size="large"
+              aria-label="account of current user"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
               onClick={handleMenu}
-              sx={{ cursor: 'pointer' }}
+              color="inherit"
             >
-              {currentUser.name?.charAt(0) || currentUser.email?.charAt(0)}
-            </Avatar>
+              <Avatar sx={{ bgcolor: 'secondary.main' }}>
+                {(currentUser.name?.[0] || currentUser.email?.[0] || '?').toUpperCase()}
+              </Avatar>
+            </IconButton>
             <Menu
+              id="menu-appbar"
               anchorEl={anchorEl}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
               open={Boolean(anchorEl)}
               onClose={handleClose}
             >
-              <MenuItem onClick={() => {
-                navigate('/profile');
-                handleClose();
-              }}>
-                Profile
-              </MenuItem>
+              <MenuItem component={Link} to="/profile" onClick={handleClose}>Profile</MenuItem>
               <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </Box>
         ) : (
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button 
-              color="inherit" 
-              onClick={() => navigate('/login')}
-            >
+          <Box>
+            <Button color="inherit" component={Link} to="/login">
               Login
             </Button>
-            <Button 
-              color="inherit" 
-              onClick={() => navigate('/signup')}
-              variant="outlined"
-            >
+            <Button color="inherit" component={Link} to="/signup">
               Sign Up
             </Button>
           </Box>

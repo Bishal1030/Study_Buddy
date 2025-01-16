@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
     apiKey: "AIzaSyATJ_HbztePFa8JyzU_7HG8qyijPDAh8Lg",
@@ -12,6 +12,22 @@ const firebaseConfig = {
     measurementId: "G-YRJ3S7R97T"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app); 
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Test connection
+const testConnection = async () => {
+  try {
+    const testDocRef = doc(db, 'test', 'test');
+    await getDoc(testDocRef);
+    console.log('Firestore connection successful');
+  } catch (error) {
+    console.error('Firestore connection error:', error);
+  }
+};
+
+testConnection();
+
+export { auth, db };

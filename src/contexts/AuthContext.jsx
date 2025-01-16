@@ -12,7 +12,11 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 const AuthContext = createContext();
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }
 
 export function AuthProvider({ children }) {
@@ -20,20 +24,15 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   async function signup(email, password, name) {
-    console.log('Starting signup process...'); // Debug log
     try {
-      // Create auth user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      console.log('User created successfully'); // Debug log
-
-      // Update profile with name
+      
       await updateProfile(userCredential.user, {
         displayName: name
       });
-      console.log('Profile updated with name'); // Debug log
 
-      // Create user document in Firestore
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
+      const userData = {
+        uid: userCredential.user.uid,
         name,
         email,
         createdAt: new Date().toISOString(),
@@ -41,17 +40,12 @@ export function AuthProvider({ children }) {
         good: '',
         intermediate: '',
         beginner: '',
-        interested: ''
-      });
-      console.log('User document created in Firestore'); // Debug log
+        interested: '',
+        bio: `Hi, I'm ${name}!`
+      };
 
-      // Set the current user immediately
-      setCurrentUser({
-        ...userCredential.user,
-        name,
-        email
-      });
-
+      await setDoc(doc(db, 'users', userCredential.user.uid), userData);
+      setCurrentUser({ ...userCredential.user, ...userData });
       return userCredential.user;
     } catch (error) {
       console.error('Signup error:', error);
@@ -61,12 +55,15 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+      
       if (userDoc.exists()) {
-        setCurrentUser({ ...result.user, ...userDoc.data() });
+        const userData = userDoc.data();
+        setCurrentUser({ ...userCredential.user, ...userData });
       }
-      return result.user;
+      
+      return userCredential.user;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -85,16 +82,26 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('Auth state changed:', user ? 'User logged in' : 'No user'); // Debug log
-      
       if (user) {
         try {
-          const docRef = doc(db, 'users', user.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setCurrentUser({ ...user, ...docSnap.data() });
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            setCurrentUser({ ...user, ...userDoc.data() });
           } else {
-            setCurrentUser(user);
+            const userData = {
+              uid: user.uid,
+              name: user.displayName || 'User',
+              email: user.email,
+              createdAt: new Date().toISOString(),
+              expert: '',
+              good: '',
+              intermediate: '',
+              beginner: '',
+              interested: '',
+              bio: `Hi, I'm ${user.displayName || 'User'}!`
+            };
+            await setDoc(doc(db, 'users', user.uid), userData);
+            setCurrentUser({ ...user, ...userData });
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
