@@ -89,9 +89,11 @@ function Navbar() {
                 component={Link} 
                 to="/dashboard"
                 sx={{
-                  fontFamily: "'Roboto', sans-serif",
-                  fontWeight: 500,
-                  letterSpacing: '0.5px',
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontSize: '0.95rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.8px',
+                  textTransform: 'none',
                   position: 'relative',
                   overflow: 'hidden',
                   '&::after': {
@@ -122,9 +124,11 @@ function Navbar() {
                 component={Link} 
                 to="/resources"
                 sx={{
-                  fontFamily: "'Roboto', sans-serif",
-                  fontWeight: 500,
-                  letterSpacing: '0.5px',
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontSize: '0.95rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.8px',
+                  textTransform: 'none',
                   position: 'relative',
                   overflow: 'hidden',
                   '&::after': {
