@@ -55,29 +55,26 @@ function Navbar() {
           <Typography 
             variant="h5" 
             sx={{ 
-              fontWeight: 800,
-              fontFamily: "'Nunito', sans-serif",
-              fontSize: '1.8rem',
-              letterSpacing: '0.5px',
+              fontWeight: 700,
+              fontFamily: "'Dancing Script', cursive",
+              fontSize: '2.2rem',
+              letterSpacing: '1px',
               background: 'linear-gradient(45deg, #2196F3 30%, #00E676 90%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)',
+              textShadow: '1px 1px 2px rgba(0, 0, 0, 0.1)',
               position: 'relative',
               padding: '0.2em 0',
               '& span': {
-                color: '#90caf9',
-                fontWeight: 900,
+                fontFamily: "'Dancing Script', cursive",
+                background: 'linear-gradient(45deg, #90caf9 30%, #4caf50 90%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontWeight: 700,
               },
-              animation: 'glow 1.5s ease-in-out infinite alternate',
-              '@keyframes glow': {
-                from: {
-                  textShadow: '0 0 5px #fff, 0 0 10px #fff, 0 0 15px #2196F3, 0 0 20px #2196F3'
-                },
-                to: {
-                  textShadow: '0 0 10px #fff, 0 0 20px #fff, 0 0 30px #00E676, 0 0 40px #00E676'
-                }
-              }
+              filter: 'contrast(1.1)',
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale',
             }}
           >
             Study<span>Buddy</span>
