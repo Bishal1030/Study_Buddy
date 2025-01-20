@@ -270,9 +270,9 @@ function Navbar() {
               <Button 
                 color="inherit" 
                 component={Link} 
-                to="/register"
+                to="/signup"
                 sx={{
-                  fontFamily: "'Roboto', sans-serif",
+                  fontFamily: "'Montserrat', sans-serif",
                   fontWeight: 500,
                   letterSpacing: '0.5px',
                   position: 'relative',
@@ -298,7 +298,7 @@ function Navbar() {
                   }
                 }}
               >
-                Register
+                Sign up
               </Button>
             </>
           )}
