@@ -10,7 +10,7 @@ import {
   Menu,
   MenuItem
 } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
@@ -19,6 +19,7 @@ import logo from '../assets/Logo.png';
 function Navbar() {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [anchorEl, setAnchorEl] = React.useState(null);
 
   const handleMenu = (event) => {
@@ -126,30 +127,27 @@ function Navbar() {
                 sx={{
                   fontFamily: "'Montserrat', sans-serif",
                   fontSize: '0.95rem',
-                  fontWeight: 600,
+                  fontWeight: location.pathname === "/resources" ? 600 : 400,
                   letterSpacing: '0.8px',
                   textTransform: 'none',
                   position: 'relative',
-                  overflow: 'hidden',
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                    '&::after': {
+                      width: '100%',
+                    },
+                  },
                   '&::after': {
                     content: '""',
                     position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    width: '100%',
+                    bottom: '5px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: location.pathname === "/resources" ? '100%' : '0%',
                     height: '2px',
-                    backgroundColor: 'currentColor',
-                    transform: 'scaleX(0)',
-                    transformOrigin: 'right',
-                    transition: 'transform 0.3s ease',
+                    backgroundColor: 'white',
+                    transition: 'width 0.3s ease',
                   },
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    '&::after': {
-                      transform: 'scaleX(1)',
-                      transformOrigin: 'left',
-                    }
-                  }
                 }}
               >
                 Resources

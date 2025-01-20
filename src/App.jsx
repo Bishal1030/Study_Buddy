@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import Resources from './pages/Resources';
+import Uploads from './pages/Uploads';
 import Profile from './pages/Profile';
 import { ThemeProvider, createTheme, Box } from '@mui/material';
 
@@ -78,6 +79,14 @@ function App() {
                       <Resources />
                     </PrivateRoute>
                   } 
+                />
+                <Route 
+                  path="/uploads"
+                  element={
+                    <PrivateRoute>
+                      <Uploads />
+                    </PrivateRoute>
+                  }
                 />
                 <Route 
                   path="/profile" 
