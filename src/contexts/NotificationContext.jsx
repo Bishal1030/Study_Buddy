@@ -25,13 +25,17 @@ export function NotificationProvider({ children }) {
   const [openToast, setOpenToast] = useState(false);
   const [notification, setNotification] = useState({ message: '', sender: '' });
   const { currentUser } = useAuth();
-  const [processedMessages] = useState(new Set());
+  const [processedMessages] = useState(() => {
+    // Initialize from localStorage or create new Set
+    const saved = localStorage.getItem('processedMessages');
+    return new Set(saved ? JSON.parse(saved) : []);
+  });
 
   useEffect(() => {
     if (!currentUser?.uid) return;
 
-    console.log('Setting up message listener for:', currentUser.uid);
     const unsubscribers = [];
+    const componentMountTime = Date.now();
 
     // Listen to all chats containing the current user's ID
     const chatsQuery = query(
@@ -54,13 +58,22 @@ export function NotificationProvider({ children }) {
             if (change.type === 'added') {
               const message = change.doc.data();
               const messageId = change.doc.id;
+              const messageTime = message.timestamp?.toMillis();
 
+              // Only show notification if:
+              // 1. Message is from another user
+              // 2. Message hasn't been processed before
+              // 3. Message has a valid timestamp
+              // 4. Message was sent after component mount
               if (message.senderId !== currentUser.uid && 
                   !processedMessages.has(messageId) &&
-                  message.timestamp) {
+                  messageTime &&
+                  messageTime > componentMountTime) {
                 
-                console.log('New message received:', message);
                 processedMessages.add(messageId);
+                // Save to localStorage to persist across renders
+                localStorage.setItem('processedMessages', 
+                  JSON.stringify([...processedMessages]));
 
                 setNotification({
                   message: message.text,
@@ -100,42 +113,31 @@ export function NotificationProvider({ children }) {
           vertical: 'top', 
           horizontal: 'right' 
         }}
-        sx={{
-          position: 'fixed',
-          zIndex: 9999,
-          mt: 2,
-          mr: 2
-        }}
       >
         <Alert 
           onClose={handleCloseToast} 
-          severity="info" 
-          sx={{ 
-            width: '100%',
-            minWidth: '300px',
-            boxShadow: 3,
-            bgcolor: 'primary.main',
+          severity="info"
+          sx={{
+            backgroundColor: '#0a1929', // Dark background
+            border: '1px solid rgba(144, 202, 249, 0.2)', // Subtle primary color border
+            backdropFilter: 'blur(8px)',
             '& .MuiAlert-icon': {
-              color: 'white'
+              color: '#90caf9' // Primary color for icon
             },
-            '& .MuiAlert-message': {
-              color: 'white'
+            '& .MuiAlert-action': {
+              color: '#90caf9' // Primary color for close button
             }
           }}
         >
-          <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-            New message from {notification.sender}
-          </Typography>
           <Typography 
-            variant="body2" 
+            variant="body1" 
             sx={{ 
-              wordBreak: 'break-word',
-              maxHeight: '60px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
+              color: '#90caf9', // Primary color for text
+              fontWeight: 500,
+              opacity: 0.9 // Slightly dimmed for better dark theme appearance
             }}
           >
-            {notification.message}
+            {notification.sender}: {notification.message}
           </Typography>
         </Alert>
       </Snackbar>
