@@ -6,9 +6,17 @@ import {
   Paper, 
   Typography, 
   Avatar, 
-  CircularProgress 
+  CircularProgress,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Chip,
+  Modal
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../config/firebase';
 import { 
@@ -20,7 +28,9 @@ import {
   serverTimestamp,
   doc,
   setDoc,
-  getDoc
+  getDoc,
+  getDocs,
+  writeBatch
 } from 'firebase/firestore';
 
 function ChatWindow({ recipientId, recipientName }) {
@@ -28,55 +38,54 @@ function ChatWindow({ recipientId, recipientName }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [profileDetails, setProfileDetails] = useState(null);
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const { currentUser } = useAuth();
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
   };
 
   useEffect(() => {
-    if (!currentUser?.uid || !recipientId) return;
+    if (!currentUser?.uid || !recipientId) {
+      setLoading(false);
+      return;
+    }
+
+    const chatId = [currentUser.uid, recipientId].sort().join('-');
+    let unsubscribe = null;
 
     const setupChat = async () => {
       try {
-        const chatId = [currentUser.uid, recipientId].sort().join('-');
+        // Create chat document if it doesn't exist
         const chatDocRef = doc(db, 'chats', chatId);
-
-        // Create or update chat document
         const chatDoc = await getDoc(chatDocRef);
+        
         if (!chatDoc.exists()) {
-          console.log('Creating new chat document');
           await setDoc(chatDocRef, {
             users: [currentUser.uid, recipientId],
-            createdAt: serverTimestamp(),
-            lastMessage: null
+            createdAt: serverTimestamp()
           });
         }
 
         // Listen to messages
-        console.log('Setting up message listener for chat:', chatId);
         const q = query(
           collection(db, 'chats', chatId, 'messages'),
           orderBy('timestamp', 'asc')
         );
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-          console.log('Received message update:', snapshot.docs.length, 'messages');
+        unsubscribe = onSnapshot(q, (snapshot) => {
           const messageData = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
           }));
           setMessages(messageData);
           setLoading(false);
-          scrollToBottom();
-        }, (error) => {
-          console.error("Error in chat listener:", error);
-          setError("Failed to load messages");
-          setLoading(false);
         });
 
-        return unsubscribe;
       } catch (error) {
         console.error("Error setting up chat:", error);
         setError("Failed to setup chat");
@@ -84,110 +93,260 @@ function ChatWindow({ recipientId, recipientName }) {
       }
     };
 
-    const unsubscribe = setupChat();
+    setupChat();
+
     return () => {
-      if (unsubscribe && typeof unsubscribe === 'function') {
+      if (unsubscribe) {
         unsubscribe();
       }
     };
   }, [currentUser?.uid, recipientId]);
 
+  useEffect(() => {
+    if (!loading && messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [loading, messages]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages.length]);
+
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() || !currentUser?.uid || !recipientId) return;
+
+    const chatId = [currentUser.uid, recipientId].sort().join('-');
 
     try {
-      const chatId = [currentUser.uid, recipientId].sort().join('-');
-      
       await addDoc(collection(db, 'chats', chatId, 'messages'), {
-        text: message,
+        text: message.trim(),
         senderId: currentUser.uid,
         senderName: currentUser.displayName || 'User',
         timestamp: serverTimestamp(),
       });
 
       setMessage('');
-      scrollToBottom();
     } catch (error) {
       console.error("Error sending message:", error);
       setError("Failed to send message");
     }
   };
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  const handleDeleteChat = async () => {
+    if (!currentUser?.uid || !recipientId) return;
+    
+    const chatId = [currentUser.uid, recipientId].sort().join('-');
+    setLoading(true);
+    setDeleteDialogOpen(false);
+
+    try {
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
+      const snapshot = await getDocs(messagesRef);
+      
+      const batch = writeBatch(db);
+      snapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+
+      setMessages([]);
+    } catch (error) {
+      console.error("Error deleting messages:", error);
+      setError("Failed to delete messages");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProfileDetails = async (userId) => {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        // Convert comma-separated strings to arrays
+        ['expert', 'good', 'intermediate', 'beginner', 'interested'].forEach(level => {
+          if (userData[level]) {
+            userData[`${level}Skills`] = userData[level].split(',').map(skill => skill.trim()).filter(Boolean);
+          }
+        });
+        setProfileDetails(userData);
+      }
+    } catch (error) {
+      console.error("Error fetching profile details:", error);
+    }
+  };
+
+  const handleProfileClick = () => {
+    fetchProfileDetails(recipientId);
+    setProfileDialogOpen(true);
+  };
+
+  const handleImageClick = () => {
+    setImagePreviewOpen(true);
+  };
 
   if (error) {
     return (
-      <Paper sx={{ p: 3, textAlign: 'center' }}>
+      <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#0a1929', color: '#90caf9' }}>
         <Typography color="error">{error}</Typography>
       </Paper>
     );
   }
 
   return (
-    <Paper sx={{ height: '500px', display: 'flex', flexDirection: 'column', p: 2 }}>
-      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Avatar>{recipientName[0]}</Avatar>
-        {recipientName}
-      </Typography>
+    <Paper 
+      elevation={3}
+      sx={{ 
+        height: '500px', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        p: 2,
+        backgroundColor: '#0a1929',
+        border: '1px solid rgba(144, 202, 249, 0.2)',
+      }}
+    >
+      {/* Chat Header */}
+      <Box 
+        sx={{ 
+          p: 2, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          bgcolor: '#0a1929'
+        }}
+      >
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 2,
+            cursor: 'pointer'
+          }}
+          onClick={handleProfileClick}
+        >
+          <Avatar
+            sx={{
+              bgcolor: '#90caf9',
+              color: '#0a1929',
+              width: 40,
+              height: 40
+            }}
+          >
+            {recipientName[0]}
+          </Avatar>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              color: '#90caf9',
+              fontWeight: 500
+            }}
+          >
+            {recipientName}
+          </Typography>
+        </Box>
+        <IconButton 
+          onClick={() => setDeleteDialogOpen(true)}
+          sx={{ color: '#90caf9' }}
+        >
+          <DeleteIcon />
+        </IconButton>
+      </Box>
 
-      <Box sx={{ 
-        flexGrow: 1, 
-        overflow: 'auto', 
-        mb: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-        p: 2
-      }}>
+      {/* Messages Container */}
+      <Box 
+        sx={{ 
+          flexGrow: 1, 
+          overflow: 'auto', 
+          mb: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1,
+          p: 2,
+          position: 'relative',
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(144, 202, 249, 0.1)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(144, 202, 249, 0.3)',
+            borderRadius: '4px',
+            '&:hover': {
+              background: 'rgba(144, 202, 249, 0.5)',
+            },
+          },
+        }}
+      >
+        {loading && (
+          <Box sx={{ 
+            position: 'absolute', 
+            top: '50%', 
+            left: '50%', 
+            transform: 'translate(-50%, -50%)'
+          }}>
+            <CircularProgress sx={{ color: '#90caf9' }} />
+          </Box>
+        )}
+        
         {messages.map((msg) => (
           <Box
             key={msg.id}
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              alignItems: msg.senderId === currentUser.uid ? 'flex-end' : 'flex-start',
+              alignItems: msg.senderId === currentUser?.uid ? 'flex-end' : 'flex-start',
               gap: 0.5,
+              mb: 1,
             }}
           >
             <Box sx={{
               display: 'flex',
               alignItems: 'flex-end',
               gap: 1,
+              maxWidth: '85%',
             }}>
-              {msg.senderId !== currentUser.uid && (
-                <Avatar sx={{ width: 24, height: 24 }}>
+              {msg.senderId !== currentUser?.uid && (
+                <Avatar 
+                  sx={{ 
+                    width: 28, 
+                    height: 28,
+                    bgcolor: '#90caf9',
+                    color: '#0a1929',
+                    fontSize: '0.875rem'
+                  }}
+                >
                   {msg.senderName?.[0]}
                 </Avatar>
               )}
-              <Paper
+              <Box
                 sx={{
                   p: 1.5,
-                  maxWidth: '70%',
-                  bgcolor: msg.senderId === currentUser.uid ? 'primary.main' : 'grey.100',
-                  color: msg.senderId === currentUser.uid ? 'white' : 'text.primary',
-                  borderRadius: msg.senderId === currentUser.uid 
+                  bgcolor: msg.senderId === currentUser?.uid ? '#90caf9' : 'rgba(144, 202, 249, 0.1)',
+                  color: msg.senderId === currentUser?.uid ? '#0a1929' : '#90caf9',
+                  borderRadius: msg.senderId === currentUser?.uid 
                     ? '20px 20px 4px 20px'
                     : '20px 20px 20px 4px',
+                  maxWidth: '100%',
+                  wordBreak: 'break-word',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                 }}
               >
                 <Typography variant="body1">
                   {msg.text}
                 </Typography>
-              </Paper>
+              </Box>
             </Box>
             
             <Typography 
               variant="caption" 
               sx={{ 
                 px: 2,
-                color: 'text.secondary',
+                color: 'rgba(144, 202, 249, 0.5)',
                 fontSize: '0.75rem',
               }}
             >
@@ -201,16 +360,15 @@ function ChatWindow({ recipientId, recipientName }) {
         <div ref={messagesEndRef} />
       </Box>
 
-      <Box 
-        component="form" 
-        onSubmit={handleSend} 
-        sx={{ 
-          display: 'flex', 
+      {/* Message Input */}
+      <Box
+        component="form"
+        onSubmit={handleSend}
+        sx={{
+          display: 'flex',
           gap: 1,
-          mt: 'auto',
-          pt: 2,
-          borderTop: 1,
-          borderColor: 'divider'
+          p: 1,
+          borderTop: '1px solid rgba(144, 202, 249, 0.1)',
         }}
       >
         <TextField
@@ -221,24 +379,191 @@ function ChatWindow({ recipientId, recipientName }) {
           placeholder="Type a message..."
           sx={{
             '& .MuiOutlinedInput-root': {
+              backgroundColor: 'rgba(144, 202, 249, 0.1)',
               borderRadius: '20px',
-            }
+              '& fieldset': {
+                borderColor: 'rgba(144, 202, 249, 0.2)',
+              },
+              '&:hover fieldset': {
+                borderColor: 'rgba(144, 202, 249, 0.3)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#90caf9',
+              },
+            },
+            '& .MuiInputBase-input': {
+              color: '#90caf9',
+            },
           }}
         />
-        <Button 
-          type="submit" 
-          variant="contained" 
-          endIcon={<SendIcon />}
-          sx={{ 
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={!message.trim()}
+          sx={{
+            minWidth: '50px',
+            height: '40px',
             borderRadius: '20px',
-            px: 3
+            backgroundColor: '#90caf9',
+            color: '#0a1929',
+            '&:hover': {
+              backgroundColor: 'rgba(144, 202, 249, 0.8)',
+            },
           }}
         >
-          Send
+          <SendIcon />
         </Button>
       </Box>
+
+      {/* Delete Chat Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            backgroundColor: '#0a1929',
+            color: '#90caf9',
+            border: '1px solid rgba(144, 202, 249, 0.2)',
+          }
+        }}
+      >
+        <DialogTitle>Delete Chat History</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete all messages in this chat? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)}
+            sx={{ 
+              color: '#90caf9',
+              '&:hover': {
+                backgroundColor: 'rgba(144, 202, 249, 0.1)'
+              }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteChat}
+            sx={{ 
+              color: '#ff4444',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 68, 68, 0.1)'
+              }
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Profile Dialog */}
+      <Dialog 
+        open={profileDialogOpen} 
+        onClose={() => setProfileDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Profile Details</DialogTitle>
+        <DialogContent>
+          {profileDetails ? (
+            <Box sx={{ p: 2 }}>
+              <Box sx={{ display: 'flex', gap: 3, mb: 4 }}>
+                <Avatar 
+                  src={profileDetails.photoURL} 
+                  sx={{ 
+                    width: 150, 
+                    height: 150,
+                    cursor: 'pointer'
+                  }}
+                  onClick={handleImageClick}
+                />
+                <Box>
+                  <Typography variant="h4" gutterBottom>{profileDetails.displayName}</Typography>
+                  <Typography variant="body1" gutterBottom>Email: {profileDetails.email}</Typography>
+                  {profileDetails.department && (
+                    <Typography variant="body1" gutterBottom>Department: {profileDetails.department}</Typography>
+                  )}
+                  {profileDetails.semester && (
+                    <Typography variant="body1" gutterBottom>Semester: {profileDetails.semester}</Typography>
+                  )}
+                </Box>
+              </Box>
+
+              {profileDetails.bio && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h6" gutterBottom>Bio</Typography>
+                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {profileDetails.bio}
+                  </Typography>
+                </Box>
+              )}
+
+              {['expert', 'good', 'intermediate', 'beginner', 'interested'].map(level => (
+                profileDetails[`${level}Skills`]?.length > 0 && (
+                  <Box sx={{ mb: 3 }} key={level}>
+                    <Typography variant="h6" gutterBottom sx={{ textTransform: 'capitalize' }}>
+                      {level === 'interested' ? 'Interested In' : `${level} Skills`}
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {profileDetails[`${level}Skills`].map((skill, index) => (
+                        <Chip 
+                          key={index}
+                          label={skill}
+                          sx={{ 
+                            bgcolor: level === 'expert' ? '#4caf50' : 
+                                    level === 'good' ? '#2196f3' : 
+                                    level === 'intermediate' ? '#ff9800' : 
+                                    level === 'beginner' ? '#f44336' : 
+                                    '#9c27b0',
+                            color: 'white'
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )
+              ))}
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <CircularProgress />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setProfileDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Image Preview Modal */}
+      <Modal
+        open={imagePreviewOpen}
+        onClose={() => setImagePreviewOpen(false)}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <Box
+          component="img"
+          src={profileDetails?.photoURL}
+          sx={{
+            maxWidth: '90vw',
+            maxHeight: '90vh',
+            objectFit: 'contain',
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            p: 1
+          }}
+          onClick={() => setImagePreviewOpen(false)}
+        />
+      </Modal>
     </Paper>
   );
 }
 
-export default ChatWindow; 
+export default ChatWindow;

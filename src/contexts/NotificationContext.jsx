@@ -7,7 +7,8 @@ import {
   query, 
   orderBy, 
   onSnapshot,
-  where 
+  where,
+  serverTimestamp
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 
@@ -25,11 +26,7 @@ export function NotificationProvider({ children }) {
   const [openToast, setOpenToast] = useState(false);
   const [notification, setNotification] = useState({ message: '', sender: '' });
   const { currentUser } = useAuth();
-  const [processedMessages] = useState(() => {
-    // Initialize from localStorage or create new Set
-    const saved = localStorage.getItem('processedMessages');
-    return new Set(saved ? JSON.parse(saved) : []);
-  });
+  const [processedMessages] = useState(new Set());
 
   useEffect(() => {
     if (!currentUser?.uid) return;
@@ -37,20 +34,17 @@ export function NotificationProvider({ children }) {
     const unsubscribers = [];
     const componentMountTime = Date.now();
 
-    // Listen to all chats containing the current user's ID
     const chatsQuery = query(
       collection(db, 'chats'),
       where('users', 'array-contains', currentUser.uid)
     );
 
-    const chatUnsubscribe = onSnapshot(chatsQuery, (chatSnapshot) => {
+    const unsubscribe = onSnapshot(chatsQuery, (chatSnapshot) => {
       chatSnapshot.docs.forEach((chatDoc) => {
-        const chatId = chatDoc.id;
-        
-        // Set up message listener for each chat
         const messagesQuery = query(
-          collection(db, 'chats', chatId, 'messages'),
-          orderBy('timestamp', 'desc')
+          collection(db, 'chats', chatDoc.id, 'messages'),
+          orderBy('timestamp', 'desc'),
+          where('timestamp', '>', new Date(componentMountTime))
         );
 
         const messageUnsubscribe = onSnapshot(messagesQuery, (messageSnapshot) => {
@@ -58,25 +52,19 @@ export function NotificationProvider({ children }) {
             if (change.type === 'added') {
               const message = change.doc.data();
               const messageId = change.doc.id;
-              const messageTime = message.timestamp?.toMillis();
-
-              // Only show notification if:
-              // 1. Message is from another user
-              // 2. Message hasn't been processed before
-              // 3. Message has a valid timestamp
-              // 4. Message was sent after component mount
+              
               if (message.senderId !== currentUser.uid && 
-                  !processedMessages.has(messageId) &&
-                  messageTime &&
-                  messageTime > componentMountTime) {
-                
+                  !processedMessages.has(messageId)) {
                 processedMessages.add(messageId);
-                // Save to localStorage to persist across renders
-                localStorage.setItem('processedMessages', 
-                  JSON.stringify([...processedMessages]));
+                
+                // Truncate long messages for notification
+                const MAX_NOTIFICATION_LENGTH = 50;
+                const truncatedMessage = message.text.length > MAX_NOTIFICATION_LENGTH 
+                  ? `${message.text.substring(0, MAX_NOTIFICATION_LENGTH)}...`
+                  : message.text;
 
                 setNotification({
-                  message: message.text,
+                  message: truncatedMessage,
                   sender: message.senderName
                 });
                 setOpenToast(true);
@@ -89,9 +77,8 @@ export function NotificationProvider({ children }) {
       });
     });
 
-    unsubscribers.push(chatUnsubscribe);
+    unsubscribers.push(unsubscribe);
 
-    // Cleanup function
     return () => {
       unsubscribers.forEach(unsubscribe => unsubscribe());
     };
@@ -109,32 +96,41 @@ export function NotificationProvider({ children }) {
         open={openToast}
         autoHideDuration={4000}
         onClose={handleCloseToast}
-        anchorOrigin={{ 
-          vertical: 'top', 
-          horizontal: 'right' 
-        }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert 
           onClose={handleCloseToast} 
           severity="info"
           sx={{
-            backgroundColor: '#0a1929', // Dark background
-            border: '1px solid rgba(144, 202, 249, 0.2)', // Subtle primary color border
+            backgroundColor: '#0a1929',
+            border: '1px solid rgba(144, 202, 249, 0.2)',
             backdropFilter: 'blur(8px)',
+            width: '300px',
+            height: '48px',
             '& .MuiAlert-icon': {
-              color: '#90caf9' // Primary color for icon
+              color: '#90caf9'
             },
             '& .MuiAlert-action': {
-              color: '#90caf9' // Primary color for close button
+              color: '#90caf9'
+            },
+            '& .MuiAlert-message': {
+              padding: '4px 0',
+              width: '100%',
+              overflow: 'hidden'
             }
           }}
         >
           <Typography 
             variant="body1" 
             sx={{ 
-              color: '#90caf9', // Primary color for text
+              color: '#90caf9',
               fontWeight: 500,
-              opacity: 0.9 // Slightly dimmed for better dark theme appearance
+              opacity: 0.9,
+              width: '220px',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              lineHeight: '1.5'
             }}
           >
             {notification.sender}: {notification.message}
