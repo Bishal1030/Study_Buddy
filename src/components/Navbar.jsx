@@ -1,20 +1,13 @@
-import React from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
-  Box, 
-  Avatar,
-  IconButton,
-  Menu,
-  MenuItem
-} from '@mui/material';
+import React, { useState } from 'react';
+import { AppBar, Toolbar, Typography, Box, Button, IconButton, Avatar, Menu, MenuItem } from '@mui/material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import logo from '../assets/Logo.png';
+import ChatWindow from './Chatbot/ChatWindow'; // Import ChatWindow
+import FloatingChatButton from './Chatbot/FloatingChatButton'; // Import FloatingChatButton
+
 
 function Navbar() {
   const { currentUser, logout } = useAuth();
@@ -22,6 +15,23 @@ function Navbar() {
   const location = useLocation();
   const [anchorEl, setAnchorEl] = React.useState(null);
 
+  // Add this state for calendar
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+    // Add this handler
+    const toggleCalendar = () => {
+      setIsCalendarOpen(prev => !prev);
+    };
+
+  // State to manage the chat window visibility
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  
+  // Function to toggle the chat window visibility
+  const toggleChat = () => {
+    setIsChatOpen((prev) => !prev);
+  };
+
+  // Menu toggle logic for user profile
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -58,9 +68,9 @@ function Navbar() {
             sx={{ 
               fontWeight: 700,
               fontFamily: "'Dancing Script', cursive",
-              fontSize: '2.2rem',
+              fontSize: '2rem',
               letterSpacing: '1px',
-              background: 'linear-gradient(45deg, #2196F3 30%, #00E676 90%)',
+              background: 'linear-gradient(45deg,rgb(255, 255, 255) 30%,rgb(243, 243, 243) 90%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.1)',
@@ -68,7 +78,7 @@ function Navbar() {
               padding: '0.2em 0',
               '& span': {
                 fontFamily: "'Dancing Script', cursive",
-                background: 'linear-gradient(45deg, #90caf9 30%, #4caf50 90%)',
+                background: 'linear-gradient(45deg,rgb(255, 255, 255) 30%,rgb(255, 255, 255) 90%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 fontWeight: 700,
@@ -204,27 +214,11 @@ function Navbar() {
                     handleClose();
                     navigate('/profile');
                   }}
-                  sx={{
-                    gap: 1,
-                    '&:hover': {
-                      '& .MuiSvgIcon-root': {
-                        transform: 'scale(1.1)',
-                      }
-                    }
-                  }}
                 >
                   Profile
                 </MenuItem>
                 <MenuItem 
                   onClick={handleLogout}
-                  sx={{
-                    gap: 1,
-                    '&:hover': {
-                      '& .MuiSvgIcon-root': {
-                        transform: 'scale(1.1)',
-                      }
-                    }
-                  }}
                 >
                   Logout
                 </MenuItem>
@@ -236,32 +230,6 @@ function Navbar() {
                 color="inherit" 
                 component={Link} 
                 to="/login"
-                sx={{
-                  fontFamily: "'Roboto', sans-serif",
-                  fontWeight: 500,
-                  letterSpacing: '0.5px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '2px',
-                    backgroundColor: 'currentColor',
-                    transform: 'scaleX(0)',
-                    transformOrigin: 'right',
-                    transition: 'transform 0.3s ease',
-                  },
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    '&::after': {
-                      transform: 'scaleX(1)',
-                      transformOrigin: 'left',
-                    }
-                  }
-                }}
               >
                 Login
               </Button>
@@ -269,41 +237,22 @@ function Navbar() {
                 color="inherit" 
                 component={Link} 
                 to="/signup"
-                sx={{
-                  fontFamily: "'Montserrat', sans-serif",
-                  fontWeight: 500,
-                  letterSpacing: '0.5px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '2px',
-                    backgroundColor: 'currentColor',
-                    transform: 'scaleX(0)',
-                    transformOrigin: 'right',
-                    transition: 'transform 0.3s ease',
-                  },
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    '&::after': {
-                      transform: 'scaleX(1)',
-                      transformOrigin: 'left',
-                    }
-                  }
-                }}
               >
-                Sign up
+                Sign Up
               </Button>
             </>
           )}
         </Box>
       </Toolbar>
+
+      {/* Floating chat button */}
+      <FloatingChatButton toggleChat={toggleChat} />
+
+      {/* Chat window */}
+      <ChatWindow isChatOpen={isChatOpen} toggleChat={toggleChat} />
+
     </AppBar>
   );
 }
 
-export default Navbar; 
+export default Navbar;

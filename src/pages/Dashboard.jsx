@@ -100,16 +100,16 @@ function Dashboard() {
           sx={{ 
             p: 4, 
             mb: 4, 
-            background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.12) 0%, rgba(0, 230, 118, 0.12) 100%)',
+            background: 'linear-gradient(135deg, rgba(253, 250, 210, 0.76) 0%, rgba(0, 230, 118, 0.12) 100%)',
             backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(144, 202, 249, 0.2)',
+            // border: '1px solid rgba(144, 202, 249, 0.2)',
             borderRadius: '20px',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
             position: 'relative',
             overflow: 'hidden',
             transition: 'all 0.3s ease',
             '&:hover': {
-              boxShadow: '0 8px 32px rgba(33, 150, 243, 0.15)',
+              // boxShadow: '0 8px 32px rgba(33, 150, 243, 0.15)',
               transform: 'translateY(-2px)',
             }
           }}
