@@ -16,7 +16,8 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#90caf9', // Lighter blue
+      light: '#757ce8',
+      main: '##3f50b5', // Lighter blue
     },
     secondary: {
       main: '#81c784', // Lighter green
@@ -34,7 +35,8 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          background: 'linear-gradient(45deg, #1a237e 30%, #00695c 90%)',
+          // background: 'linear-gradient(45deg, #132f4c 30%, #173a5e 90%)',
+          background: '#0284C7',
         },
       },
     },
@@ -52,7 +54,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ 
-        bgcolor: '#0a1929', 
+        bgcolor: '  ', 
         minHeight: '100vh',
         color: 'white' 
       }}>
