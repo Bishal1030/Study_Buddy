@@ -230,8 +230,8 @@ function ChatWindow({ recipientId, recipientName }) {
         display: "flex",
         flexDirection: "column",
         p: 2,
-        backgroundColor: "#0a1929",
-        border: "1px solid rgba(144, 202, 249, 0.2)",
+        backgroundColor: "#ffffff",
+        border: "1px solid rgba(0, 0, 0, 0.12)",
       }}
     >
       {/* Chat Header */}
@@ -241,7 +241,6 @@ function ChatWindow({ recipientId, recipientName }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          bgcolor: "#0a1929",
         }}
       >
         <Box
@@ -255,8 +254,8 @@ function ChatWindow({ recipientId, recipientName }) {
         >
           <Avatar
             sx={{
-              bgcolor: "#90caf9",
-              color: "#0a1929",
+              bgcolor: "#1976d2",
+              color: "#ffffff",
               width: 40,
               height: 40,
             }}
@@ -266,14 +265,14 @@ function ChatWindow({ recipientId, recipientName }) {
           <Typography
             variant="h6"
             sx={{
-              color: "#90caf9",
+              color: "#000000",
               fontWeight: 500,
             }}
           >
             {recipientName}
           </Typography>
         </Box>
-        <IconButton onClick={() => setDeleteDialogOpen(true)} sx={{ color: "#90caf9" }}>
+        <IconButton onClick={() => setDeleteDialogOpen(true)} sx={{ color: "#757575" }}>
           <DeleteIcon />
         </IconButton>
       </Box>
@@ -293,14 +292,14 @@ function ChatWindow({ recipientId, recipientName }) {
             width: "8px",
           },
           "&::-webkit-scrollbar-track": {
-            background: "rgba(144, 202, 249, 0.1)",
+            background: "rgba(0, 0, 0, 0.1)",
             borderRadius: "4px",
           },
           "&::-webkit-scrollbar-thumb": {
-            background: "rgba(144, 202, 249, 0.3)",
+            background: "rgba(0, 0, 0, 0.2)",
             borderRadius: "4px",
             "&:hover": {
-              background: "rgba(144, 202, 249, 0.5)",
+              background: "rgba(0, 0, 0, 0.3)",
             },
           },
         }}
@@ -314,7 +313,7 @@ function ChatWindow({ recipientId, recipientName }) {
               transform: "translate(-50%, -50%)",
             }}
           >
-            <CircularProgress sx={{ color: "#90caf9" }} />
+            <CircularProgress sx={{ color: "#1976d2" }} />
           </Box>
         )}
 
@@ -353,8 +352,8 @@ function ChatWindow({ recipientId, recipientName }) {
               <Box
                 sx={{
                   p: 1.5,
-                  bgcolor: msg.senderId === currentUser?.uid ? "#90caf9" : "rgba(144, 202, 249, 0.1)",
-                  color: msg.senderId === currentUser?.uid ? "#0a1929" : "#90caf9",
+                  bgcolor: msg.senderId === currentUser?.uid ? "#1976d2" : "#f5f5f5",
+                  color: msg.senderId === currentUser?.uid ? "#ffffff" : "#000000",
                   borderRadius: msg.senderId === currentUser?.uid ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
                   maxWidth: "100%",
                   wordBreak: "break-word",
@@ -369,7 +368,7 @@ function ChatWindow({ recipientId, recipientName }) {
               variant="caption"
               sx={{
                 px: 2,
-                color: "rgba(144, 202, 249, 0.5)",
+                color: "rgba(0, 0, 0, 0.6)",
                 fontSize: "0.75rem",
               }}
             >
@@ -388,7 +387,7 @@ function ChatWindow({ recipientId, recipientName }) {
           display: "flex",
           gap: 1,
           p: 1,
-          borderTop: "1px solid rgba(144, 202, 249, 0.1)",
+          borderTop: "1px solid rgba(0, 0, 0, 0.12)",
         }}
       >
         <TextField
@@ -399,20 +398,20 @@ function ChatWindow({ recipientId, recipientName }) {
           placeholder="Type a message..."
           sx={{
             "& .MuiOutlinedInput-root": {
-              backgroundColor: "rgba(144, 202, 249, 0.1)",
+              backgroundColor: "#f5f5f5",
               borderRadius: "20px",
               "& fieldset": {
-                borderColor: "rgba(144, 202, 249, 0.2)",
+                borderColor: "rgba(0, 0, 0, 0.23)",
               },
               "&:hover fieldset": {
-                borderColor: "rgba(144, 202, 249, 0.3)",
+                borderColor: "rgba(0, 0, 0, 0.87)",
               },
               "&.Mui-focused fieldset": {
-                borderColor: "#90caf9",
+                borderColor: "#1976d2",
               },
             },
             "& .MuiInputBase-input": {
-              color: "#90caf9",
+              color: "rgba(0, 0, 0, 0.87)",
             },
           }}
         />
@@ -424,10 +423,10 @@ function ChatWindow({ recipientId, recipientName }) {
             minWidth: "50px",
             height: "40px",
             borderRadius: "20px",
-            backgroundColor: "#90caf9",
-            color: "#0a1929",
+            backgroundColor: "#1976d2",
+            color: "#ffffff",
             "&:hover": {
-              backgroundColor: "rgba(144, 202, 249, 0.8)",
+              backgroundColor: "#1565c0",
             },
           }}
         >
@@ -441,9 +440,9 @@ function ChatWindow({ recipientId, recipientName }) {
         onClose={() => setDeleteDialogOpen(false)}
         PaperProps={{
           sx: {
-            backgroundColor: "#0a1929",
-            color: "#90caf9",
-            border: "1px solid rgba(144, 202, 249, 0.2)",
+            backgroundColor: "#fff",
+            color: "inherit",
+            border: "1px solid rgba(0, 0, 0, 0.12)",
           },
         }}
       >

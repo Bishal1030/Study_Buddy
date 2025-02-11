@@ -2,9 +2,18 @@ import React, { useState } from "react";
 import { IoSend } from "react-icons/io5";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+const TypingIndicator = () => (
+  <div style={styles.typingIndicator}>
+    <div style={styles.dot}></div>
+    <div style={styles.dot}></div>
+    <div style={styles.dot}></div>
+  </div>
+);
+
 const ChatWindow = ({ isChatOpen, toggleChat }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
 
   const hitRequest = () => {
     if (message) {
@@ -15,20 +24,27 @@ const ChatWindow = ({ isChatOpen, toggleChat }) => {
   };
 
   const generateResponse = async (msg) => {
-    const genAI = new GoogleGenerativeAI(
-      "AIzaSyB8qQNpyQuge7YedyYpwtyFcNFm6F5c-iE"
-    );
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent(msg);
-
-    const newMessages = [
-      ...messages,
-      { type: "userMsg", text: msg },
-      { type: "responseMsg", text: result.response.text() },
-    ];
-
-    setMessages(newMessages);
-    setMessage("");
+    try {
+      setIsTyping(true);
+      const genAI = new GoogleGenerativeAI(
+        "AIzaSyB8qQNpyQuge7YedyYpwtyFcNFm6F5c-iE"
+      );
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      // Add user message immediately
+      setMessages(prev => [...prev, { type: "userMsg", text: msg }]);
+      setMessage("");
+      
+      const result = await model.generateContent(msg);
+      
+      // Add bot response after receiving it
+      setMessages(prev => [...prev, { type: "responseMsg", text: result.response.text() }]);
+    } catch (error) {
+      console.error("Error generating response:", error);
+      setMessages(prev => [...prev, { type: "responseMsg", text: "Sorry, I encountered an error. Please try again." }]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const newChat = () => {
@@ -66,6 +82,7 @@ const ChatWindow = ({ isChatOpen, toggleChat }) => {
               {msg.text}
             </div>
           ))}
+          {isTyping && <TypingIndicator />}
         </div>
 
         {/* Footer Section */}
@@ -102,31 +119,33 @@ const ChatWindow = ({ isChatOpen, toggleChat }) => {
 const styles = {
   chatWindow: {
     position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
+    bottom: "20px",
+    right: "20px",
+    width: "380px",
+    height: "600px",
     backgroundColor: "#f8f9fa",
-    zIndex: 1000,
     display: "flex",
     flexDirection: "column",
     boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-},
-chatHeader: {
-    background: "linear-gradient(135deg, #2c3e50 0%, #3498db 100%)",
+    borderRadius: "12px",
+    overflow: "hidden",
+    zIndex: 1000, // Ensure it stays on top of other content
+  },
+  chatHeader: {
+    background: "#0284C7",
     color: "white",
     padding: "15px 20px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-},
-headerButtons: {
+  },
+  headerButtons: {
     display: "flex",
     gap: "15px",
     alignItems: "center",
-},
-newChatButton: {
+  },
+  newChatButton: {
     backgroundColor: "#27ae60",
     color: "white",
     padding: "8px 16px",
@@ -137,11 +156,11 @@ newChatButton: {
     fontWeight: "600",
     transition: "all 0.2s ease",
     "&:hover": {
-        backgroundColor: "#219a52",
-        transform: "translateY(-1px)",
+      backgroundColor: "#219a52",
+      transform: "translateY(-1px)",
     }
-},
-deleteButton: {
+  },
+  deleteButton: {
     backgroundColor: "rgba(255,255,255,0.1)",
     fontSize: "24px",
     color: "white",
@@ -151,9 +170,9 @@ deleteButton: {
     cursor: "pointer",
     transition: "all 0.2s ease",
     "&:hover": {
-        backgroundColor: "rgba(255,255,255,0.2)",
+      backgroundColor: "rgba(255,255,255,0.2)",
     }
-},
+  },
   chatMessages: {
     flex: 1,
     overflowY: "auto",
@@ -226,6 +245,38 @@ deleteButton: {
     "&:hover": {
       backgroundColor: "rgba(0,122,255,0.1)",
       transform: "scale(1.1)",
+    },
+  },
+  typingIndicator: {
+    display: "flex",
+    gap: "8px",
+    padding: "12px 18px",
+    background: "white",
+    borderRadius: "18px 18px 18px 4px",
+    maxWidth: "75px",
+    alignSelf: "flex-start",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+  },
+  dot: {
+    width: "8px",
+    height: "8px",
+    backgroundColor: "#90a4ae",
+    borderRadius: "50%",
+    animation: "typing 1.4s infinite ease-in-out",
+    animationDelay: "0s",
+    "@keyframes typing": {
+      "0%, 100%": {
+        transform: "translateY(0)",
+      },
+      "50%": {
+        transform: "translateY(-10px)",
+      },
+    },
+    "&:nth-child(2)": {
+      animationDelay: "0.2s",
+    },
+    "&:nth-child(3)": {
+      animationDelay: "0.4s",
     },
   },
 };
