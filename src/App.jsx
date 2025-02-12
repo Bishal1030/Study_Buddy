@@ -10,14 +10,14 @@ import Dashboard from './pages/Dashboard';
 import Resources from './pages/Resources';
 import Uploads from './pages/Uploads';
 import Profile from './pages/Profile';
-import { ThemeProvider, createTheme, Box } from '@mui/material';
+import { ThemeProvider, createTheme, Box, Typography } from '@mui/material';
 
 const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
       light: '#757ce8',
-      main: '##3f50b5', // Lighter blue
+      main: '#3f50b5', // Lighter blue
     },
     secondary: {
       main: '#81c784', // Lighter green
@@ -35,15 +35,15 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          // background: 'linear-gradient(45deg, #132f4c 30%, #173a5e 90%)',
-          background: '#0284C7',
+          // background: 'linear-gradient(45deg, #0284C7 30%, #173a5e 90%)',
+          background: '#0284C7', //nav
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          background: 'linear-gradient(45deg, #132f4c 30%, #173a5e 90%)',
+          background: 'linear-gradient(45deg, #0284C7 30%, #0284C7 90%)',
         },
       },
     },
@@ -56,49 +56,67 @@ function App() {
       <Box sx={{ 
         bgcolor: '  ', 
         minHeight: '100vh',
-        color: 'white' 
+        color: 'white',
+        display: 'flex',
+        flexDirection: 'column' 
       }}>
         <AuthProvider>
           <NotificationProvider>
             <Router>
               <Navbar />
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route 
-                  path="/dashboard" 
-                  element={
-                    <PrivateRoute>
-                      <Dashboard />
-                    </PrivateRoute>
-                  } 
-                />
-                <Route 
-                  path="/resources" 
-                  element={
-                    <PrivateRoute>
-                      <Resources />
-                    </PrivateRoute>
-                  } 
-                />
-                <Route 
-                  path="/uploads"
-                  element={
-                    <PrivateRoute>
-                      <Uploads />
-                    </PrivateRoute>
-                  }
-                />
-                <Route 
-                  path="/profile" 
-                  element={
-                    <PrivateRoute>
-                      <Profile />
-                    </PrivateRoute>
-                  } 
-                />
-              </Routes>
+              <Box sx={{ flex: 1 }}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<SignUp />} />
+                  <Route 
+                    path="/dashboard" 
+                    element={
+                      <PrivateRoute>
+                        <Dashboard />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/resources" 
+                    element={
+                      <PrivateRoute>
+                        <Resources />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/uploads"
+                    element={
+                      <PrivateRoute>
+                        <Uploads />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route 
+                    path="/profile" 
+                    element={
+                      <PrivateRoute>
+                        <Profile />
+                      </PrivateRoute>
+                    } 
+                  />
+                </Routes>
+              </Box>
+              <Box
+                component="footer"
+                sx={{
+                  py: 3,
+                  px: 2,
+                  mt: 'auto',
+                  backgroundColor: theme.palette.background.paper,
+                  textAlign: 'center'
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  © {new Date().getFullYear()} Study Buddy. All rights reserved.
+                </Typography>
+              </Box>
             </Router>
           </NotificationProvider>
         </AuthProvider>

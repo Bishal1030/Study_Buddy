@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -53,6 +53,7 @@ function Dashboard() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [recentChats, setRecentChats] = useState([]);
 
   useEffect(() => {
     if (!currentUser?.uid) return;
@@ -75,6 +76,36 @@ function Dashboard() {
 
     return () => unsubscribe();
   }, [currentUser?.uid]);
+
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+
+    const q = query(
+      collection(db, 'chats'),
+      where('participants', 'array-contains', currentUser.uid)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const chatsData = snapshot.docs.map(doc => doc.data());
+      const uniqueUsers = new Set();
+      const recentUsers = [];
+
+      chatsData.forEach(chat => {
+        const otherUserId = chat.participants.find(id => id !== currentUser.uid);
+        if (otherUserId && !uniqueUsers.has(otherUserId)) {
+          uniqueUsers.add(otherUserId);
+          const user = users.find(u => u.id === otherUserId);
+          if (user) {
+            recentUsers.push(user);
+          }
+        }
+      });
+
+      setRecentChats(recentUsers);
+    });
+
+    return () => unsubscribe();
+  }, [currentUser?.uid, users]);
 
   const filteredUsers = users.filter(user =>
     user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -161,89 +192,92 @@ function Dashboard() {
         </Paper>
 
         {/* Updated input field with darker styling */}
-        <Paper 
-          elevation={2}
-          sx={{ 
-            p: 3, 
-            mb: 4,
-            background: 'rgba(30, 36, 50, 0.95)',
-            borderRadius: '20px',
-            border: '1px solid rgba(144, 202, 249, 0.2)',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-            '&:hover': {
-              boxShadow: '0 6px 24px rgba(33, 150, 243, 0.2)',
-              background: 'rgba(30, 36, 50, 0.98)',
-            }
-          }}
-        >
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'flex-start' }}>
           <TextField
             fullWidth
-            placeholder="Search by name or expertise..."
+            size="medium"
+            placeholder="Search by names or expertise"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <SearchIcon sx={{ 
-                    color: '#90caf9',
-                    fontSize: '1.5rem',
-                    ml: 1 
+                    color: 'rgba(0, 0, 0, 0.54)',
+                    fontSize: '1.5rem'
                   }} />
                 </InputAdornment>
               ),
               sx: {
                 fontFamily: "'Montserrat', sans-serif",
-                fontSize: '1.1rem',
-                color: '#ffffff',
-                '& input::placeholder': {
-                  color: '#90caf9',
-                  opacity: 0.7,
-                  fontWeight: 500,
-                },
+                fontSize: '1rem',
+                height: '56px',
+                color: '#000000',
                 '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(144, 202, 249, 0.3)',
-                  borderWidth: '2px',
-                  transition: 'all 0.3s ease',
-                  borderRadius: '15px',
+                  borderColor: 'rgba(0, 0, 0, 0.23)',
+                  borderRadius: '8px',
+                  borderWidth: '1.5px',
                 },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#90caf9',
-                  borderWidth: '2px',
+                  borderColor: 'rgba(0, 0, 0, 0.4)',
                 },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#90caf9',
-                  borderWidth: '2px',
+                  borderColor: '#1976d2',
                 },
-                borderRadius: '15px',
-                backgroundColor: 'rgba(25, 32, 44, 0.9)',
-                '&:hover': {
-                  backgroundColor: 'rgba(25, 32, 44, 1)',
+                backgroundColor: '#f0f0f0',
+                width: '400px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                '& input': {
+                  fontSize: '1rem',
+                  padding: '14px 14px',
+                  color: '#000000',
                 },
-                boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.2)',
-                padding: '3px',
-              }
-            }}
-            sx={{
-              '& .MuiInputBase-input': {
-                color: '#ffffff',
-                fontWeight: 500,
-                fontSize: '1.1rem',
-                padding: '14px 16px',
-                '&::placeholder': {
+                '& input::placeholder': {
+                  color: 'rgba(0, 0, 0, 0.6)',
                   opacity: 1,
+                  fontStyle: 'italic',
+                  fontSize: '1rem'
                 }
-              },
-              '& .MuiInputLabel-root': {
-                color: '#90caf9',
-              },
-              '& .MuiInputLabel-root.Mui-focused': {
-                color: '#90caf9',
               }
             }}
+            sx={{ width: '400px' }}
           />
-        </Paper>
+        </Box>
       </motion.div>
+
+      <Box sx={{ 
+        position: 'fixed',
+        top: 20,
+        right: 20,
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'row-reverse',
+        gap: 1,
+        padding: 1,
+        borderRadius: '12px',
+      }}>
+        {recentChats.map((user) => (
+          <Avatar
+            key={user.id}
+            src={user.photoURL}
+            onClick={() => handleStartChat(user)}
+            sx={{
+              width: 45,
+              height: 45,
+              cursor: 'pointer',
+              border: '2px solid #fff',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              transition: 'transform 0.2s ease',
+              '&:hover': {
+                transform: 'scale(1.1)',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+              }
+            }}
+          >
+            {user.name ? user.name[0].toUpperCase() : 'U'}
+          </Avatar>
+        ))}
+      </Box>
 
       {/* Users List */}
       <Box sx={{ mb: 4 }}>
@@ -308,19 +342,22 @@ function Dashboard() {
                             sx={{ 
                               fontFamily: "'Montserrat', sans-serif",
                               fontWeight: 600,
-                              color: '#1976d2',
+                              fontSize: '1.5rem',
+                              color: '#FFFFFF',
                               mb: 0.5
                             }}
                           >
+
                             {user.name}
                           </Typography>
                           <Typography 
                             variant="body2" 
-                            color="text.secondary"
+                            color="#E0E0E0"
                             sx={{
                               fontFamily: "'Montserrat', sans-serif",
-                              fontSize: '0.875rem'
+                              fontSize: '0.775rem'
                             }}
+
                           >
                             {user.email}
                           </Typography>
@@ -333,8 +370,9 @@ function Dashboard() {
                           sx={{ 
                             mb: 1,
                             fontFamily: "'Montserrat', sans-serif",
-                            fontWeight: 600,
-                            color: '#455a64'
+                            fontWeight: 400,
+                            fontSize: '1rem',
+                            color: '#DFF7E3'
                           }}
                         >
                           Expertise & Skills
@@ -345,31 +383,56 @@ function Dashboard() {
                           gap: 1 
                         }}>
                           {/* Expertise Levels */}
-                          {user.expert && (
-                            <Chip 
-                              label={`Expert in: ${user.expert}`}
-                              color="success"
-                              size="small"
+                          {user.expert || user.good ? (
+                            <>
+                              {user.expert && (
+                                <Chip 
+                                  label={`Expert in: ${user.expert}`}
+                                  color="#ffffff"
+                                  size="small"
+                                  sx={{ 
+                                    alignSelf: 'flex-start',
+                                    backgroundColor: '#DFF7E3',
+                                    color: '#228B22',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 500,
+                                  }}
+                                />
+                              )}
+                              {user.good && (
+                                <Chip 
+                                  label={`Good at: ${user.good}`}
+                                  color="primary"
+                                  size="small"
+                                  sx={{ 
+                                    alignSelf: 'flex-start',
+                                    backgroundColor: '#D0E9FF',
+                                    color: '#1E90FF',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 500,
+                                  }}
+                                />
+                              )}
+                            </>
+                          ) : (
+                            <Typography 
+                              variant="body2" 
                               sx={{ 
-                                alignSelf: 'flex-start',
-                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                                color: '#2e7d32',
-                                fontWeight: 500,
+                                fontFamily: "'Montserrat', sans-serif",
+                                fontSize: '0.9rem',
+                                backgroundColor: 'rgba(37, 33, 33, 0.33)',
+                                color: '#ffffff',
+                                fontWeight: 400,
+                                mb: 1,
+                                borderRadius: '8px',
+                                padding: '4px 12px',
+                                display: 'inline-block',
+                                marginRight: '100px',
                               }}
-                            />
-                          )}
-                          {user.good && (
-                            <Chip 
-                              label={`Good at: ${user.good}`}
-                              color="primary"
-                              size="small"
-                              sx={{ 
-                                alignSelf: 'flex-start',
-                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                                color: '#1976d2',
-                                fontWeight: 500,
-                              }}
-                            />
+                            >
+                              (No expertise added yet.)
+
+                            </Typography>
                           )}
                           
                           {/* Skills */}
@@ -403,25 +466,41 @@ function Dashboard() {
                       </Box>
 
                       <Button
-                        variant="contained"
-                        startIcon={<MessageIcon />}
-                        onClick={() => handleStartChat(user)}
-                        sx={{
-                          mt: 2,
-                          textTransform: 'none',
-                          fontFamily: "'Montserrat', sans-serif",
-                          fontWeight: 600,
-                          borderRadius: '8px',
-                          background: 'linear-gradient(45deg, #1976d2 30%, #2196F3 90%)',
-                          boxShadow: '0 3px 12px rgba(33, 150, 243, 0.3)',
-                          '&:hover': {
-                            background: 'linear-gradient(45deg, #1565c0 30%, #1976d2 90%)',
-                            boxShadow: '0 4px 16px rgba(33, 150, 243, 0.4)',
-                          }
-                        }}
-                      >
-                        Start Chat
-                      </Button>
+                      variant="contained"
+                      startIcon={<MessageIcon />}
+                      onClick={() => handleStartChat(user)}
+                      sx={{
+                        mt: 2,
+                        textTransform: 'none',
+                        fontFamily: "'Montserrat', sans-serif",
+                        fontWeight: 600,
+                        borderRadius: '12px', // Rounded corners for a clean look
+                        background: '#333333', // Solid charcoal color for sophistication
+                        color: '#FFFFFF', // White text for high contrast
+                        padding: '12px 30px', // Balanced padding
+                        fontSize: '1rem', // Larger text for emphasis
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', // Subtle shadow for depth
+                        transition: 'all 0.2s ease', // Smooth transition for hover effects
+                        '&:hover': {
+                          background: '#1A1A1A', // Slightly darker on hover for emphasis
+                          boxShadow: '0 6px 16px rgba(0, 0, 0, 0.3)', // Enhanced shadow on hover
+                          transform: 'translateY(-1px)', // Subtle lift effect
+                        },
+                        '&:active': {
+                          background: '#000000', // Even darker for active state
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)', // Reduced shadow for click feedback
+                          transform: 'translateY(2px)', // Pressed effect
+                        },
+                        '&:disabled': {
+                          background: '#B0B0B0', // Light gray for disabled state
+                          color: '#FFFFFF', // Keep text visible
+                          boxShadow: 'none', // No shadow for disabled state
+                          cursor: 'not-allowed', // Indicate disabled state
+                        },
+                      }}
+                        >
+                          Start Chat
+                        </Button>
                     </CardContent>
                   </Card>
                 </Grid>
@@ -443,13 +522,22 @@ function Dashboard() {
 
       {/* Chat Drawer */}
       <Drawer
-        anchor="right"
+        anchor="bottom"
         open={isChatOpen}
         onClose={() => setIsChatOpen(false)}
         sx={{
           '& .MuiDrawer-paper': {
-            width: { xs: '100%', sm: 400 },
+            height: 'auto',
+            maxHeight: '80vh',
+            width: '400px',
             p: 2,
+            backgroundColor: 'transparent',
+            boxShadow: 'none',
+            left: 'auto',
+            right: '32px',
+            bottom: '32px',
+            position: 'fixed',
+            borderRadius: '12px',
           },
         }}
       >
