@@ -26,6 +26,9 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 import { motion } from "framer-motion";
+import InfoIcon from '@mui/icons-material/Info';
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { useNavigate } from "react-router-dom";
 
 const AnimatedCard = ({ children, index }) => {
   return (
@@ -45,6 +48,7 @@ export default function Uploads() {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchUserUploads();
@@ -122,35 +126,69 @@ export default function Uploads() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
+      <Box sx={{ 
+        mb: { xs: 2, sm: 4 }, 
+        display: "flex", 
+        flexDirection: { xs: "column", sm: "row" },
+        justifyContent: "space-between",
+        alignItems: { xs: "stretch", sm: "center" },
+        gap: 2
+      }}>
         <Typography 
           variant="h5" 
           component="h1"
           sx={{ 
             fontFamily: "'Montserrat', sans-serif",
-            fontWeight: 600,
-            color: '#fff'
+            fontWeight: 900,
+            color: '#0284C7',
+            fontSize: { xs: '1.4rem', sm: '1.7rem' },
+            textAlign: { xs: 'center', sm: 'left' }
           }}
         >
           My Uploads
         </Typography>
-        {userUploads.length > 0 && (
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 2,
+          flexDirection: { xs: 'column', sm: 'row' },
+          width: { xs: '100%', sm: 'auto' }
+        }}>
           <Button
-            variant="outlined"
-            color="error"
-            onClick={() => {
-              setSelectedCollection({ id: "all" });
-              setDeleteDialogOpen(true);
-            }}
+            variant="contained"
+            onClick={() => navigate('/resources', { state: { openUpload: true } })}
+            startIcon={<CloudUploadIcon />}
+            fullWidth={false}
             sx={{
               fontFamily: "'Montserrat', sans-serif",
               textTransform: 'none',
+              backgroundColor: '#0284C7',
+              '&:hover': {
+                backgroundColor: '#0369a1',
+              },
+              width: { xs: '100%', sm: 'auto' }
             }}
           >
-            Delete All
+            Upload Resources
           </Button>
-        )}
+          {userUploads.length > 0 && (
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => {
+                setSelectedCollection({ id: "all" });
+                setDeleteDialogOpen(true);
+              }}
+              sx={{
+                fontFamily: "'Montserrat', sans-serif",
+                textTransform: 'none',
+                width: { xs: '100%', sm: 'auto' }
+              }}
+            >
+              Delete All
+            </Button>
+          )}
+        </Box>
       </Box>
 
       {loading ? (
@@ -158,26 +196,82 @@ export default function Uploads() {
           <CircularProgress />
         </Box>
       ) : userUploads.length === 0 ? (
-        <Box sx={{ textAlign: "center", py: 4 }}>
+        <Box 
+          sx={{ 
+            textAlign: "center", 
+            py: { xs: 3, sm: 4 },
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            backgroundColor: 'rgba(2, 132, 199, 0.1)',
+            borderRadius: '12px',
+            border: '1px solid rgba(2, 132, 199, 0.2)',
+            padding: { xs: '16px', sm: '24px' },
+            margin: { xs: '16px', sm: '24px' },
+          }}
+        >
+          <InfoIcon 
+            sx={{ 
+              fontSize: { xs: '36px', sm: '48px' },
+              color: '#0A4B7C',
+              mb: 2 
+            }} 
+          />
           <Typography 
             variant="h6" 
-            color="text.secondary"
-            sx={{ fontFamily: "'Montserrat', sans-serif" }}
+            sx={{ 
+              fontFamily: "'Montserrat', sans-serif",
+              color: '#0A4B7C',
+              fontWeight: 500,
+              fontSize: { xs: '1.1rem', sm: '1.25rem' }
+            }}
           >
             You haven't uploaded any resources yet
           </Typography>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              fontFamily: "'Montserrat', sans-serif",
+              color: '#0A4B7C',
+              mt: 1,
+              opacity: 0.8,
+              fontSize: { xs: '0.875rem', sm: '1rem' },
+              px: { xs: 2, sm: 0 }
+            }}
+          >
+            Start sharing by uploading your first resource
+          </Typography>
         </Box>
       ) : (
-        <Stack spacing={2}>
+        <Stack spacing={{ xs: 1.5, sm: 2 }}>
           {userUploads.map((upload, index) => (
             <AnimatedCard key={upload.id} index={index}>
-              <Card sx={{ p: 3, position: "relative" }}>
+              <Card sx={{ 
+                p: { xs: 2, sm: 3 }, 
+                position: "relative",
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: '#0284C7',
+                background: 'linear-gradient(135deg, #0284C7 0%, #0369a1 100%)',
+                color: 'white',
+                boxShadow: '0 8px 32px rgba(2, 132, 199, 0.15)',
+                borderRadius: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 12px 40px rgba(2, 132, 199, 0.25)',
+                },
+              }}>
                 <IconButton
                   sx={{
                     position: "absolute",
-                    top: 8,
-                    right: 8,
-                    color: "error.main",
+                    top: { xs: 4, sm: 8 },
+                    right: { xs: 4, sm: 8 },
+                    color: "rgba(255, 255, 255, 0.9)",
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    }
                   }}
                   onClick={() => {
                     setSelectedCollection(upload);
@@ -191,35 +285,56 @@ export default function Uploads() {
                   <Typography 
                     variant="h6" 
                     gutterBottom
-                    sx={{ fontFamily: "'Montserrat', sans-serif" }}
+                    sx={{ 
+                      fontFamily: "'Montserrat', sans-serif",
+                      fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                      pr: { xs: 4, sm: 5 },
+                      color: 'white',
+                      fontWeight: 600,
+                    }}
                   >
                     {upload.title}
                   </Typography>
                   <Typography 
-                    color="text.secondary" 
                     sx={{ 
                       mb: 2,
-                      fontFamily: "'Montserrat', sans-serif"
+                      fontFamily: "'Montserrat', sans-serif",
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                      color: 'rgba(255, 255, 255, 0.85)',
                     }}
                   >
                     {upload.description || "No description provided"}
                   </Typography>
                 </Box>
 
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Box sx={{ 
+                  display: "flex", 
+                  justifyContent: "space-between", 
+                  alignItems: "center",
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: { xs: 1, sm: 0 }
+                }}>
                   <Chip
                     label={upload.category}
-                    color="primary"
                     size="small"
                     sx={{ 
                       borderRadius: 1,
                       fontFamily: "'Montserrat', sans-serif",
+                      width: { xs: '100%', sm: 'auto' },
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                      }
                     }}
                   />
                   <Typography 
                     variant="body2" 
-                    color="primary.light"
-                    sx={{ fontFamily: "'Montserrat', sans-serif" }}
+                    sx={{ 
+                      fontFamily: "'Montserrat', sans-serif",
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      color: 'rgba(255, 255, 255, 0.85)',
+                    }}
                   >
                     {upload.files.length} Files
                   </Typography>
@@ -236,20 +351,32 @@ export default function Uploads() {
           setDeleteDialogOpen(false);
           setSelectedCollection(null);
         }}
+        PaperProps={{
+          sx: { 
+            width: { xs: '90%', sm: 'auto' },
+            m: { xs: 2, sm: 3 }
+          }
+        }}
       >
-        <DialogTitle sx={{ fontFamily: "'Montserrat', sans-serif" }}>
+        <DialogTitle sx={{ 
+          fontFamily: "'Montserrat', sans-serif",
+          fontSize: { xs: '1.25rem', sm: '1.5rem' }
+        }}>
           {selectedCollection?.id === "all"
             ? "Delete All Uploads"
             : "Delete Upload"}
         </DialogTitle>
         <DialogContent>
-          <Typography sx={{ fontFamily: "'Montserrat', sans-serif" }}>
+          <Typography sx={{ 
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: { xs: '0.875rem', sm: '1rem' }
+          }}>
             {selectedCollection?.id === "all"
               ? "Are you sure you want to delete all your uploads? This action cannot be undone."
               : "Are you sure you want to delete this upload? This action cannot be undone."}
           </Typography>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: { xs: 2, sm: 3 } }}>
           <Button
             onClick={() => {
               setDeleteDialogOpen(false);

@@ -193,7 +193,9 @@ function Profile() {
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 3 }}
+            sx={{
+              backgroundColor: '#0284C7',
+               mt: 3 }}
             disabled={loading}
           >
             Save Profile

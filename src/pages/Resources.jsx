@@ -5,7 +5,7 @@ import React, {
   useRef,
   useCallback,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -165,7 +165,8 @@ const AnimatedCard = ({ children, index }) => {
   );
 };
 
-function Resources() {
+export default function Resources() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [resources, setResources] = useState([]);
@@ -191,6 +192,13 @@ function Resources() {
   useEffect(() => {
     fetchResources();
   }, []);
+
+  useEffect(() => {
+    if (location.state?.openUpload) {
+      setOpenUpload(true);
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location]);
 
   const fetchResources = async () => {
     setIsLoading(true);
@@ -845,6 +853,10 @@ function Resources() {
               sx={{
                 fontFamily: "'Montserrat', sans-serif",
                 textTransform: 'none',
+                backgroundColor: '#0284C7',
+                '&:hover': {
+                  backgroundColor: '#0369a1',
+                },
               }}
             >
               Upload Resources
@@ -1235,5 +1247,3 @@ const getFileIcon = (fileType) => {
   if (fileType.includes("video")) return <VideoLibraryIcon />;
   return <ArticleIcon />;
 };
-
-export default Resources;
