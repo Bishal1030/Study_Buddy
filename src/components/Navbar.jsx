@@ -5,8 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import logo from '../assets/Logo.png';
-import ChatWindow from './Chatbot/ChatWindow'; // Import ChatWindow
-import FloatingChatButton from './Chatbot/FloatingChatButton'; // Import FloatingChatButton
+import ChatWindow from './ChatBot/ChatWindow'; // Corrected import path
+import FloatingChatButton from './ChatBot/FloatingChatButton'; // Import FloatingChatButton
 
 
 function Navbar() {
