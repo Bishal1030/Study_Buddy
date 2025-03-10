@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { collection, query, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,14 +17,122 @@ import {
   InputAdornment,
   Chip,
   CircularProgress,
+  useTheme,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import MessageIcon from '@mui/icons-material/Message';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
+import SchoolIcon from '@mui/icons-material/School';
 import ChatWindow from '../components/Chat/ChatWindow';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 
-const AnimatedCard = ({ children, index }) => {
+// Modern Welcome Section
+const WelcomeSection = ({ userName }) => {
+  const theme = useTheme();
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Box 
+        sx={{ 
+          mb: 4, 
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          justifyContent: 'space-between',
+          gap: 2,
+        }}
+      >
+        <Box>
+          <Typography 
+            variant="h4" 
+            sx={{ 
+              fontWeight: 700,
+              fontSize: { xs: '2rem', md: '2.5rem' },
+              color: '#1A237E',
+              mb: 1,
+              position: 'relative',
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                bottom: -8,
+                left: 0,
+                width: 80,
+                height: 4,
+                borderRadius: 2,
+                background: 'linear-gradient(90deg, #5C6BC0 0%, #3F51B5 100%)',
+              }
+            }}
+          >
+            Hey {userName || 'Study Buddy'}!
+          </Typography>
+          <Typography 
+            variant="subtitle1"
+            sx={{ 
+              color: '#000000',
+              fontSize: '1.1rem',
+              mt: 2,
+            }}
+          >
+            Find your perfect study partner and level up your skills together.
+          </Typography>
+        </Box>
+      </Box>
+    </motion.div>
+  );
+};
+
+// Modern Search Bar
+const SearchBar = ({ searchQuery, setSearchQuery }) => (
+  <Box 
+    sx={{ 
+      mb: 5, 
+      display: 'flex', 
+      flexDirection: { xs: 'column', sm: 'row' },
+      alignItems: { xs: 'stretch', sm: 'center' },
+      gap: 2,
+      width: '100%',
+    }}
+  >
+    <TextField
+      placeholder="Find study partners by name, skills or subject..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      fullWidth
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <SearchIcon sx={{ color: '#' }} />
+          </InputAdornment>
+        ),
+        sx: {
+          height: '50px',
+          borderRadius: '12px',
+          backgroundColor: '#000000',
+          border: 'none',
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'transparent',
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#E0E0E0',
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#3F51B5',
+          },
+        }
+      }}
+    />
+  </Box>
+);
+
+// Modern User Card
+const UserCard = ({ user, handleStartChat, index }) => {
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1
@@ -33,18 +141,332 @@ const AnimatedCard = ({ children, index }) => {
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
       transition={{ 
-        duration: 0.5, 
-        delay: index * 0.1,
+        duration: 0.4, 
+        delay: index * 0.08,
         ease: "easeOut"
       }}
     >
-      {children}
+      <Card
+        sx={{
+          height: '40vh',
+          display: 'flex',
+          flexDirection: 'column',
+          borderRadius: '16px',
+          border: '1px solid #F0F0F0',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.04)',
+          overflow: 'hidden',
+          transition: 'all 0.25s ease',
+          '&:hover': {
+            transform: 'translateY(-8px)',
+            boxShadow: '0 20px 40px rgba(63, 81, 181, 0.15)',
+            '& .card-header': {
+              backgroundColor: '#F5F7FF',
+            }
+          }
+        }}
+      >
+        <Box 
+          className="card-header"
+          sx={{ 
+            p: 3, 
+            borderBottom: '1px solid #F5F7FA',
+            backgroundColor: 'white',
+            transition: 'background-color 0.25s ease',
+          }}
+        >
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 2
+          }}>
+            <Avatar
+              src={user.photoURL}
+              sx={{
+                width: 60,
+                height: 60,
+                backgroundColor: '#EFEFF7',
+                boxShadow: '0 4px 12px rgba(63, 81, 181, 0.12)',
+              }}
+            >
+              {user.name ? user.name[0].toUpperCase() : 'U'}
+            </Avatar>
+            <Box>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 600,
+                  fontSize: '1.2rem',
+                  color: '#212121',
+                }}
+              >
+                {user.name}
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{
+                  color: '#6C757D',
+                  fontSize: '0.875rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  mt: 0.5,
+                }}
+              >
+                <SchoolIcon sx={{ fontSize: '1rem' }} />
+                {user.email}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        <CardContent sx={{ p: 3, pt: 2, flex: 1 }}>
+          <Box sx={{ mb: 2 }}>
+            <Typography 
+              sx={{ 
+                fontSize: '0.9rem',
+                color: '#fff',
+                fontWeight: 600,
+                mb: 1.5,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              Skills & Expertise
+            </Typography>
+            
+            {/* Expertise Levels */}
+            <Box sx={{ mb: 2 }}>
+              {user.expert ? (
+                <Box 
+                  sx={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    mb: 1,
+                  }}
+                >
+                  <Chip 
+                    label="EXPERT"
+                    size="small"
+                    sx={{ 
+                      backgroundColor: '#EDE7F6',
+                      color: '#5E35B1',
+                      fontWeight: 600,
+                      fontSize: '0.7rem',
+                      height: '22px',
+                    }}
+                  />
+                  <Typography
+                    sx={{
+                      fontSize: '0.9rem',
+                      color: '#212121',
+                    }}
+                  >
+                    {user.expert}
+                  </Typography>
+                </Box>
+              ) : null}
+              
+              {user.good ? (
+                <Box 
+                  sx={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    mb: 1,
+                  }}
+                >
+                  <Chip 
+                    label="PROFICIENT"
+                    size="small"
+                    sx={{ 
+                      backgroundColor: '#E8F5E9',
+                      color: '#2E7D32',
+                      fontWeight: 600,
+                      fontSize: '0.7rem',
+                      height: '22px',
+                    }}
+                  />
+                  <Typography
+                    sx={{
+                      fontSize: '0.9rem',
+                      color: '#212121',
+                    }}
+                  >
+                    {user.good}
+                  </Typography>
+                </Box>
+              ) : null}
+              
+              {!user.expert && !user.good && (
+                <Typography 
+                  sx={{ 
+                    fontSize: '0.9rem',
+                    color: '#e7e7e7',
+                    fontStyle: 'italic',
+                  }}
+                >
+                  No expertise specified yet
+                </Typography>
+              )}
+            </Box>
+              
+            {/* Skills */}
+            {Array.isArray(user.skills) && user.skills.length > 0 && (
+              <Box sx={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: 1,
+              }}>
+                {user.skills.map((skill, i) => (
+                  <Chip
+                    key={i}
+                    label={skill}
+                    size="small"
+                    sx={{
+                      backgroundColor: '#F5F7FA',
+                      color: '#455A64',
+                      borderRadius: '6px',
+                      fontWeight: 500,
+                      fontSize: '0.8rem',
+                      '&:hover': {
+                        backgroundColor: '#E8EAF6',
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
+            )}
+          </Box>
+        </CardContent>
+        
+        <Box sx={{ p: 3, pt: 0 }}>
+          <Button
+            variant="contained"
+            startIcon={<MessageIcon />}
+            onClick={() => handleStartChat(user)}
+            fullWidth
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              borderRadius: '10px',
+              padding: '10px 20px',
+              fontSize: '0.95rem',
+              backgroundColor: '#3F51B5',
+              '&:hover': {
+                backgroundColor: '#303F9F',
+                boxShadow: '0 6px 12px rgba(63, 81, 181, 0.2)',
+              },
+            }}
+          >
+            Start Study Session
+          </Button>
+        </Box>
+      </Card>
     </motion.div>
   );
 };
+
+// Recent Contacts Component
+const RecentContacts = ({ recentChats, handleStartChat }) => {
+  if (recentChats.length === 0) return null;
+  
+  return (
+    <Box sx={{ mb: 5 }}>
+      <Typography 
+        sx={{ 
+          fontSize: '1rem',
+          fontWeight: 600,
+          mb: 2,
+          color: '#3F51B5',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+        }}
+      >
+        <MessageIcon sx={{ fontSize: '1.2rem' }} />
+        Recent Study Partners
+      </Typography>
+      
+      <Box sx={{ 
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 2,
+      }}>
+        {recentChats.map((user) => (
+          <Box
+            key={user.id}
+            onClick={() => handleStartChat(user)}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 1,
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+              }
+            }}
+          >
+            <Avatar
+              src={user.photoURL}
+              sx={{
+                width: 56,
+                height: 56,
+                border: '3px solid white',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              }}
+            >
+              {user.name ? user.name[0].toUpperCase() : 'U'}
+            </Avatar>
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
+              {user.name?.split(' ')[0] || 'User'}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
+// Empty Search Results
+const EmptyState = () => (
+  <Box 
+    sx={{ 
+      textAlign: 'center', 
+      py: 8,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 2,
+    }}
+  >
+    <Box 
+      sx={{ 
+        width: 80, 
+        height: 80, 
+        borderRadius: '50%', 
+        backgroundColor: '#F5F7FA',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        mb: 2,
+      }}
+    >
+      <SearchIcon sx={{ fontSize: 40, color: '#9E9E9E' }} />
+    </Box>
+    <Typography variant="h6" sx={{ color: '#424242', fontWeight: 600 }}>
+      No study partners found
+    </Typography>
+    <Typography variant="body1" sx={{ color: '#757575', maxWidth: 400 }}>
+      Try adjusting your search terms or explore other subjects to find the perfect study buddy.
+    </Typography>
+  </Box>
+);
 
 function Dashboard() {
   const { currentUser } = useAuth();
@@ -55,6 +477,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [recentChats, setRecentChats] = useState([]);
 
+  // Fetch users data
   useEffect(() => {
     if (!currentUser?.uid) return;
 
@@ -69,7 +492,6 @@ function Dashboard() {
         }))
         .filter(user => user.id !== currentUser.uid);
       
-      console.log('Fetched users with skills:', usersData);
       setUsers(usersData);
       setLoading(false);
     });
@@ -77,6 +499,7 @@ function Dashboard() {
     return () => unsubscribe();
   }, [currentUser?.uid]);
 
+  // Fetch recent chats
   useEffect(() => {
     if (!currentUser?.uid) return;
 
@@ -101,17 +524,22 @@ function Dashboard() {
         }
       });
 
-      setRecentChats(recentUsers);
+      setRecentChats(recentUsers.slice(0, 5)); // Limit to 5 recent chats
     });
 
     return () => unsubscribe();
   }, [currentUser?.uid, users]);
 
-  const filteredUsers = users.filter(user =>
-    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.skills?.join(' ').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.expertise?.join(' ').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Memoize filtered users to improve performance
+  const filteredUsers = useMemo(() => {
+    return users.filter(user =>
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.skills?.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (user.expertise?.some(exp => exp.toLowerCase().includes(searchQuery.toLowerCase())) || false) ||
+      (user.good?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
+      (user.expert?.toLowerCase().includes(searchQuery.toLowerCase()) || false)
+    );
+  }, [users, searchQuery]);
 
   const handleStartChat = (user) => {
     setSelectedUser(user);
@@ -119,404 +547,89 @@ function Dashboard() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Welcome Section with Gradient */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        <Paper 
-          elevation={3} 
-          sx={{ 
-            p: 4, 
-            mb: 4, 
-            background: 'linear-gradient(135deg, rgba(253, 250, 210, 0.76) 0%, rgba(0, 230, 118, 0.12) 100%)',
-            backdropFilter: 'blur(10px)',
-            // border: '1px solid rgba(144, 202, 249, 0.2)',
-            borderRadius: '20px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-            position: 'relative',
-            overflow: 'hidden',
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              // boxShadow: '0 8px 32px rgba(33, 150, 243, 0.15)',
-              transform: 'translateY(-2px)',
-            }
-          }}
-        >
-          <Box sx={{ position: 'relative', zIndex: 1 }}>
-            <Typography 
-              variant="h3" 
-              gutterBottom 
-              sx={{ 
-                fontFamily: "'Montserrat', sans-serif",
-                fontSize: { xs: '2.5rem', md: '3rem' },
-                color: '#1565c0',
-                mb: 1,
-                fontWeight: 600,
-                letterSpacing: '0.5px',
-              }}
-            >
-              Welcome back,
-            </Typography>
-            <Typography 
-              variant="h3" 
-              sx={{ 
-                fontFamily: "'Dancing Script', cursive",
-                fontSize: { xs: '3rem', md: '3.8rem' },
-                background: 'linear-gradient(45deg, #2196F3 30%, #00E676 90%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                fontWeight: 700,
-                letterSpacing: '1px',
-                mb: 2,
-                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)',
-              }}
-            >
-              {currentUser?.name || 'Study Buddy'}!
-            </Typography>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontFamily: "'Montserrat', sans-serif",
-                color: '#455a64',
-                fontWeight: 500,
-                letterSpacing: '0.5px',
-                lineHeight: 1.5,
-              }}
-            >
-              Ready to connect and learn together?
-            </Typography>
-          </Box>
-        </Paper>
+    <Container maxWidth="lg" sx={{ mt: 6, mb: 8, backgroundColor: 'white' }}>
+      {/* Welcome Section */}
+      <WelcomeSection userName={currentUser?.name} />
 
-        {/* Updated input field with darker styling */}
-        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'flex-start' }}>
-          <TextField
-            fullWidth
-            size="medium"
-            placeholder="Search by names or expertise"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ 
-                    color: 'rgba(0, 0, 0, 0.54)',
-                    fontSize: '1.5rem'
-                  }} />
-                </InputAdornment>
-              ),
-              sx: {
-                fontFamily: "'Montserrat', sans-serif",
-                fontSize: '1rem',
-                height: '56px',
-                color: '#000000',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(0, 0, 0, 0.23)',
-                  borderRadius: '8px',
-                  borderWidth: '1.5px',
-                },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(0, 0, 0, 0.4)',
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#1976d2',
-                },
-                backgroundColor: '#f0f0f0',
-                width: '400px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                '& input': {
-                  fontSize: '1rem',
-                  padding: '14px 14px',
-                  color: '#000000',
-                },
-                '& input::placeholder': {
-                  color: 'rgba(0, 0, 0, 0.6)',
-                  opacity: 1,
-                  fontStyle: 'italic',
-                  fontSize: '1rem'
-                }
-              }
-            }}
-            sx={{ width: '400px' }}
-          />
-        </Box>
-      </motion.div>
+      {/* Search Bar */}
+      <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
-      <Box sx={{ 
-        position: 'fixed',
-        top: 20,
-        right: 20,
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'row-reverse',
-        gap: 1,
-        padding: 1,
-        borderRadius: '12px',
-      }}>
-        {recentChats.map((user) => (
-          <Avatar
-            key={user.id}
-            src={user.photoURL}
-            onClick={() => handleStartChat(user)}
-            sx={{
-              width: 45,
-              height: 45,
-              cursor: 'pointer',
-              border: '2px solid #fff',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              transition: 'transform 0.2s ease',
-              '&:hover': {
-                transform: 'scale(1.1)',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-              }
-            }}
-          >
-            {user.name ? user.name[0].toUpperCase() : 'U'}
-          </Avatar>
-        ))}
-      </Box>
+      {/* Recent Contacts */}
+      <RecentContacts recentChats={recentChats} handleStartChat={handleStartChat} />
 
       {/* Users List */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-          Study Buddies
-        </Typography>
+      <Box>
+        <Box sx={{ 
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3
+        }}>
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              fontWeight: 700,
+              color: '#212121',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}
+          >
+            Available Study Partners
+            {!loading && filteredUsers.length > 0 && (
+              <Chip 
+                label={filteredUsers.length} 
+                size="small" 
+                sx={{ 
+                  fontSize: '0.75rem', 
+                  height: '22px',
+                  backgroundColor: '#EDE7F6',
+                  color: '#5E35B1',
+                  fontWeight: 600,
+                }} 
+              />
+            )}
+          </Typography>
+          
+          <Button
+            variant="text"
+            sx={{
+              textTransform: 'none',
+              color: '#3F51B5',
+              fontWeight: 500,
+            }}
+          >
+            View All
+          </Button>
+        </Box>
         
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-            <CircularProgress />
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            py: 8 
+          }}>
+            <CircularProgress size={40} sx={{ color: '#3F51B5' }} />
           </Box>
         ) : (
-          <Grid container spacing={3}>
-            {filteredUsers && filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <Grid item xs={12} sm={6} md={4} key={user.id}>
-                  <Card
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      borderRadius: '16px',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-5px)',
-                        boxShadow: '0 8px 24px rgba(33, 150, 243, 0.15)',
-                      }
-                    }}
-                  >
-                    <CardContent 
-                      sx={{ 
-                        p: 3,
-                        flex: 1,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        height: '100%',
-                        '&:last-child': { 
-                          pb: 3
-                        }
-                      }}
-                    >
-                      <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        mb: 2,
-                        gap: 2
-                      }}>
-                        <Avatar
-                          src={user.photoURL}
-                          sx={{
-                            width: 60,
-                            height: 60,
-                            border: '2px solid #90caf9',
-                            boxShadow: '0 2px 8px rgba(33, 150, 243, 0.2)',
-                          }}
-                        >
-                          {user.name ? user.name[0].toUpperCase() : 'U'}
-                        </Avatar>
-                        <Box>
-                          <Typography 
-                            variant="h6" 
-                            sx={{ 
-                              fontFamily: "'Montserrat', sans-serif",
-                              fontWeight: 600,
-                              fontSize: '1.5rem',
-                              color: '#FFFFFF',
-                              mb: 0.5
-                            }}
-                          >
-
-                            {user.name}
-                          </Typography>
-                          <Typography 
-                            variant="body2" 
-                            color="#E0E0E0"
-                            sx={{
-                              fontFamily: "'Montserrat', sans-serif",
-                              fontSize: '0.775rem'
-                            }}
-
-                          >
-                            {user.email}
-                          </Typography>
-                        </Box>
-                      </Box>
-
-                      <Box sx={{ flex: 1 }}>
-                        <Typography 
-                          variant="subtitle1" 
-                          sx={{ 
-                            mb: 1,
-                            fontFamily: "'Montserrat', sans-serif",
-                            fontWeight: 400,
-                            fontSize: '1rem',
-                            color: '#DFF7E3'
-                          }}
-                        >
-                          Expertise & Skills
-                        </Typography>
-                        <Box sx={{ 
-                          display: 'flex', 
-                          flexDirection: 'column',
-                          gap: 1 
-                        }}>
-                          {/* Expertise Levels */}
-                          {user.expert || user.good ? (
-                            <>
-                              {user.expert && (
-                                <Chip 
-                                  label={`Expert in: ${user.expert}`}
-                                  color="#ffffff"
-                                  size="small"
-                                  sx={{ 
-                                    alignSelf: 'flex-start',
-                                    backgroundColor: '#DFF7E3',
-                                    color: '#228B22',
-                                    fontSize: '0.8rem',
-                                    fontWeight: 500,
-                                  }}
-                                />
-                              )}
-                              {user.good && (
-                                <Chip 
-                                  label={`Good at: ${user.good}`}
-                                  color="primary"
-                                  size="small"
-                                  sx={{ 
-                                    alignSelf: 'flex-start',
-                                    backgroundColor: '#D0E9FF',
-                                    color: '#1E90FF',
-                                    fontSize: '0.8rem',
-                                    fontWeight: 500,
-                                  }}
-                                />
-                              )}
-                            </>
-                          ) : (
-                            <Typography 
-                              variant="body2" 
-                              sx={{ 
-                                fontFamily: "'Montserrat', sans-serif",
-                                fontSize: '0.9rem',
-                                backgroundColor: 'rgba(37, 33, 33, 0.33)',
-                                color: '#ffffff',
-                                fontWeight: 400,
-                                mb: 1,
-                                borderRadius: '8px',
-                                padding: '4px 12px',
-                                display: 'inline-block',
-                                marginRight: '100px',
-                              }}
-                            >
-                              (No expertise added yet.)
-
-                            </Typography>
-                          )}
-                          
-                          {/* Skills */}
-                          {Array.isArray(user.skills) && user.skills.length > 0 && (
-                            <Box sx={{ 
-                              display: 'flex', 
-                              flexWrap: 'wrap', 
-                              gap: 1,
-                              mt: 1 
-                            }}>
-                              {user.skills.map((skill, i) => (
-                                <Chip
-                                  key={i}
-                                  label={skill}
-                                  size="small"
-                                  sx={{
-                                    backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                                    color: '#1976d2',
-                                    borderRadius: '8px',
-                                    fontFamily: "'Montserrat', sans-serif",
-                                    fontWeight: 500,
-                                    '&:hover': {
-                                      backgroundColor: 'rgba(33, 150, 243, 0.2)',
-                                    }
-                                  }}
-                                />
-                              ))}
-                            </Box>
-                          )}
-                        </Box>
-                      </Box>
-
-                      <Button
-                      variant="contained"
-                      startIcon={<MessageIcon />}
-                      onClick={() => handleStartChat(user)}
-                      sx={{
-                        mt: 2,
-                        textTransform: 'none',
-                        fontFamily: "'Montserrat', sans-serif",
-                        fontWeight: 600,
-                        borderRadius: '12px', // Rounded corners for a clean look
-                        background: '#333333', // Solid charcoal color for sophistication
-                        color: '#FFFFFF', // White text for high contrast
-                        padding: '12px 30px', // Balanced padding
-                        fontSize: '1rem', // Larger text for emphasis
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', // Subtle shadow for depth
-                        transition: 'all 0.2s ease', // Smooth transition for hover effects
-                        '&:hover': {
-                          background: '#1A1A1A', // Slightly darker on hover for emphasis
-                          boxShadow: '0 6px 16px rgba(0, 0, 0, 0.3)', // Enhanced shadow on hover
-                          transform: 'translateY(-1px)', // Subtle lift effect
-                        },
-                        '&:active': {
-                          background: '#000000', // Even darker for active state
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)', // Reduced shadow for click feedback
-                          transform: 'translateY(2px)', // Pressed effect
-                        },
-                        '&:disabled': {
-                          background: '#B0B0B0', // Light gray for disabled state
-                          color: '#FFFFFF', // Keep text visible
-                          boxShadow: 'none', // No shadow for disabled state
-                          cursor: 'not-allowed', // Indicate disabled state
-                        },
-                      }}
-                        >
-                          Start Chat
-                        </Button>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))
-            ) : (
-              <Grid item xs={12}>
-                <Box sx={{ 
-                  textAlign: 'center', 
-                  py: 4,
-                  color: '#666'
-                }}>
-                  <Typography variant="h6">No users found</Typography>
-                </Box>
+          <>
+            {filteredUsers.length > 0 ? (
+              <Grid container spacing={3}>
+                {filteredUsers.map((user, index) => (
+                  <Grid item xs={12} sm={6} md={4} key={user.id}>
+                    <UserCard 
+                      user={user} 
+                      handleStartChat={handleStartChat} 
+                      index={index}
+                    />
+                  </Grid>
+                ))}
               </Grid>
+            ) : (
+              <EmptyState />
             )}
-          </Grid>
+          </>
         )}
       </Box>
 
@@ -545,6 +658,7 @@ function Dashboard() {
           <ChatWindow
             recipientId={selectedUser.id}
             recipientName={selectedUser.name}
+            onClose={() => setIsChatOpen(false)}
           />
         )}
       </Drawer>
@@ -552,4 +666,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard; 
+export default Dashboard;
