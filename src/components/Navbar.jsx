@@ -163,38 +163,7 @@ function Navbar() {
                 >
                   Resources
                 </Button>
-                <Button 
-                  color="inherit" 
-                  component={Link} 
-                  to="/calendar"
-                  sx={{
-                    fontFamily: "'Montserrat', sans-serif",
-                    fontSize: '0.95rem',
-                    fontWeight: location.pathname === "/resources" ? 600 : 400,
-                    letterSpacing: '0.8px',
-                    textTransform: 'none',
-                    position: 'relative',
-                    '&:hover': {
-                      backgroundColor: 'transparent',
-                      '&::after': {
-                        width: '100%',
-                      },
-                    },
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      bottom: '5px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: location.pathname === "/resources" ? '100%' : '0%',
-                      height: '2px',
-                      backgroundColor: 'white',
-                      transition: 'width 0.3s ease',
-                    },
-                  }}
-                >
-                  Calendar
-                </Button>
+
                 <IconButton
                   size="large"
                   onClick={handleMenu}

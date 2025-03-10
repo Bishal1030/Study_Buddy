@@ -11,6 +11,7 @@ import Resources from './pages/Resources';
 import Uploads from './pages/Uploads';
 import Profile from './pages/Profile';
 import { ThemeProvider, createTheme, Box, Typography } from '@mui/material';
+import Footer from './components/Footer';
 
 const theme = createTheme({
   palette: {
@@ -103,20 +104,7 @@ function App() {
                   />
                 </Routes>
               </Box>
-              <Box
-                component="footer"
-                sx={{
-                  py: 3,
-                  px: 2,
-                  mt: 'auto',
-                  backgroundColor: theme.palette.background.paper,
-                  textAlign: 'center'
-                }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  © {new Date().getFullYear()} Study Buddy. All rights reserved.
-                </Typography>
-              </Box>
+              <Footer/>
             </Router>
           </NotificationProvider>
         </AuthProvider>
