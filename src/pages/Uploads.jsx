@@ -126,7 +126,7 @@ export default function Uploads() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 }, }}>
       <Box sx={{ 
         mb: { xs: 2, sm: 4 }, 
         display: "flex", 
