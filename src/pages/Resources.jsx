@@ -313,11 +313,11 @@ export default function Resources() {
             />
           )}
           
-          <Typography variant="body1" paragraph sx={{ color: '#555', lineHeight: 1.6 }}>
+          <Typography variant="body1" paragraph sx={{ color: '#fff', lineHeight: 1.6 }}>
             {collection.description}
           </Typography>
           
-          <Typography variant="h6" gutterBottom sx={{ color: '#0062ff', fontWeight: 600, mb: 2 }}>
+          <Typography variant="h6" gutterBottom sx={{ color: '#fff', fontWeight: 600, mb: 2 }}>
             Files ({collection.files.length})
           </Typography>
           
@@ -336,20 +336,20 @@ export default function Resources() {
                   '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }
                 }}
               >
-                <Box sx={{ mr: 2, color: '#0062ff' }}>
+                <Box sx={{ mr: 2, color: '#000' }}>
                   {getFileIcon(file.fileType)}
                 </Box>
-                <Box sx={{ flex: 1 }}>
+                <Box sx={{ flex: 1, color: '#000'  }}>
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>{file.fileName}</Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" color="#000">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </Typography>
                 </Box>
                 <Box>
-                  <IconButton onClick={(e) => handlePreview(file, e)} size="small" sx={{ mr: 1 }}>
+                  <IconButton onClick={(e) => handlePreview(file, e)} size="small" sx={{ mr: 1, color: '#000'}}>
                     <Visibility />
                   </IconButton>
-                  <IconButton onClick={(e) => handleFileDownload(file, e)} size="small">
+                  <IconButton onClick={(e) => handleFileDownload(file, e)} size="small" sx={{ color: '#000'}}>
                     <Download />
                   </IconButton>
                 </Box>
@@ -357,7 +357,7 @@ export default function Resources() {
             ))}
           </Box>
 
-          <Box sx={{ mt: 3, p: 2, borderRadius: 2, bgcolor: '#f0f8ff', border: '1px solid #e0f0ff' }}>
+          <Box sx={{ mt: 3, p: 2, borderRadius: 2, bgcolor: '#f8f9ff', border: '1px solid #e0f0ff' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Chip 
                 label={collection.category} 
@@ -368,11 +368,11 @@ export default function Resources() {
                   fontWeight: 500
                 }} 
               />
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="green" sx={{ fontWeight: 600 }}>
                 {collection.createdAt?.toLocaleDateString()}
               </Typography>
             </Box>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="#3b3b3b" sx={{ fontWeight: 500 }}>
               Shared by {collection.uploaderName}
             </Typography>
           </Box>
@@ -557,7 +557,7 @@ export default function Resources() {
                       variant="h6" 
                       sx={{ 
                         fontWeight: 600, 
-                        color: '#1a1a1a',
+                        color: '#ededed',
                         mb: 1,
                         lineHeight: 1.3
                       }}
@@ -592,7 +592,7 @@ export default function Resources() {
                         fontSize: '0.8rem'
                       }}
                     />
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                    <Typography variant="body2" color="#ededed" sx={{ fontSize: '0.85rem' }}>
                       by {collection.uploaderName}
                     </Typography>
                   </Box>
