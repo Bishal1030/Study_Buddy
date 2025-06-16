@@ -159,11 +159,11 @@ const WelcomeSection = ({ userName }) => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '4rem',
+                    fontSize: '2rem',
                     margin: { xs: '0 auto', md: '0 0 0 auto' },
                   }}
                 >
-                  🚀
+                 (●'◡'●)
                 </Box>
               </motion.div>
             </Box>
