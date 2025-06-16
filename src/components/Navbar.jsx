@@ -97,7 +97,7 @@ function Navbar() {
             {currentUser ? (
               <>
                 <Button 
-                  color="inherit" 
+                  color="#fff" 
                   component={Link} 
                   to="/dashboard"
                   sx={{

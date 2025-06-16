@@ -54,7 +54,7 @@ const WelcomeSection = ({ userName }) => {
           position: 'relative',
           overflow: 'hidden',
           borderRadius: '24px',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)',
           p: 4,
           color: 'white',
           '&::before': {
@@ -205,12 +205,12 @@ const SearchBar = ({ searchQuery, setSearchQuery }) => (
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: '#6366f1', fontSize: '1.5rem' }} />
+                <SearchIcon sx={{ color: '#0062ff', fontSize: '1.5rem' }} />
               </InputAdornment>
             ),
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton sx={{ color: '#6366f1' }}>
+                <IconButton sx={{ color: '#0062ff' }}>
                   <FilterListIcon />
                 </IconButton>
               </InputAdornment>
@@ -228,7 +228,7 @@ const SearchBar = ({ searchQuery, setSearchQuery }) => (
                 border: 'none',
               },
               '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                border: '2px solid #6366f1',
+                border: '2px solid #0062ff',
               },
             }
           }}
@@ -284,7 +284,7 @@ const UserCard = ({ user, handleStartChat, index }) => {
             left: 0,
             right: 0,
             height: '4px',
-            background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)',
+            background: 'linear-gradient(90deg, #006288, #0062ff 0%, #00c6ff 100%)',
             opacity: isHovered ? 1 : 0,
             transition: 'opacity 0.3s ease',
           }
@@ -311,11 +311,12 @@ const UserCard = ({ user, handleStartChat, index }) => {
                 <Avatar
                   src={user.photoURL}
                   sx={{
+                    color: 'white',
                     width: 64,
                     height: 64,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)',
                     border: '3px solid white',
-                    boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
+                    boxShadow: '0 8px 32px rgba(137, 190, 245, 0.3)',
                     fontSize: '1.5rem',
                     fontWeight: 700,
                   }}
@@ -351,7 +352,7 @@ const UserCard = ({ user, handleStartChat, index }) => {
                 <Typography 
                   variant="body2" 
                   sx={{
-                    color: '#64748b',
+                    color: '#0062ff',
                     fontSize: '0.9rem',
                     display: 'flex',
                     alignItems: 'center',
@@ -359,7 +360,7 @@ const UserCard = ({ user, handleStartChat, index }) => {
                   }}
                 >
                   <SchoolIcon sx={{ fontSize: '1rem' }} />
-                  {user.email?.split('@')[0]}
+                  {user.email}
                 </Typography>
               </Box>
             </Box>
@@ -381,7 +382,7 @@ const UserCard = ({ user, handleStartChat, index }) => {
           <Typography 
             sx={{ 
               fontSize: '0.85rem',
-              color: '#6366f1',
+              color: '#0062ff',
               fontWeight: 700,
               mb: 2,
               textTransform: 'uppercase',
@@ -453,7 +454,7 @@ const UserCard = ({ user, handleStartChat, index }) => {
                   size="small"
                   sx={{
                     backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    color: '#6366f1',
+                    color: '#0062ff',
                     borderRadius: '12px',
                     fontWeight: 600,
                     fontSize: '0.8rem',
@@ -509,10 +510,10 @@ const UserCard = ({ user, handleStartChat, index }) => {
                 borderRadius: '16px',
                 padding: '12px 24px',
                 fontSize: '0.95rem',
-                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)',
                 boxShadow: '0 8px 32px rgba(99, 102, 241, 0.3)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+                  background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)',
                   transform: 'translateY(-2px)',
                   boxShadow: '0 12px 40px rgba(99, 102, 241, 0.4)',
                 },
@@ -521,23 +522,6 @@ const UserCard = ({ user, handleStartChat, index }) => {
             >
               Connect Now
             </Button>
-            
-            <IconButton
-              sx={{
-                borderRadius: '16px',
-                width: 48,
-                height: 48,
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                color: '#6366f1',
-                '&:hover': {
-                  backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                  transform: 'translateY(-2px)',
-                },
-                transition: 'all 0.3s ease',
-              }}
-            >
-              <VideocamIcon />
-            </IconButton>
           </Stack>
         </Box>
       </Card>
@@ -580,7 +564,7 @@ const RecentContacts = ({ recentChats, handleStartChat }) => {
             endIcon={<PersonAddIcon />}
             sx={{
               textTransform: 'none',
-              color: '#6366f1',
+              color: '#0062ff',
               fontWeight: 600,
               borderRadius: '12px',
               px: 3,
@@ -606,7 +590,7 @@ const RecentContacts = ({ recentChats, handleStartChat }) => {
             borderRadius: 3,
           },
           '&::-webkit-scrollbar-thumb': {
-            backgroundColor: '#6366f1',
+            backgroundColor: '#0062ff',
             borderRadius: 3,
           },
         }}>
@@ -655,7 +639,7 @@ const RecentContacts = ({ recentChats, handleStartChat }) => {
                     sx={{
                       width: 72,
                       height: 72,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      background: 'linear-gradient(135deg, #0062ff 0%, #764ba2 100%)',
                       border: '3px solid white',
                       boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                       fontSize: '1.5rem',
@@ -677,7 +661,7 @@ const RecentContacts = ({ recentChats, handleStartChat }) => {
                   </Typography>
                   <Typography sx={{ 
                     fontSize: '0.75rem', 
-                    color: '#6366f1',
+                    color: '#0062ff',
                     fontWeight: 600,
                   }}>
                     Active now
@@ -753,7 +737,7 @@ const EmptyState = () => (
           fontWeight: 700,
           px: 4,
           py: 2,
-          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)',
         }}
       >
         Explore All Partners
@@ -906,7 +890,7 @@ function Dashboard() {
               <IconButton
                 sx={{
                   backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                  color: '#6366f1',
+                  color: '#0062ff',
                   borderRadius: '12px',
                   width: 48,
                   height: 48,
@@ -921,7 +905,7 @@ function Dashboard() {
               <IconButton
                 sx={{
                   backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                  color: '#6366f1',
+                  color: '#0062ff',
                   borderRadius: '12px',
                   width: 48,
                   height: 48,
@@ -948,7 +932,7 @@ function Dashboard() {
                 <CircularProgress 
                   size={60} 
                   sx={{ 
-                    color: '#6366f1',
+                    color: '#0062ff',
                     animationDuration: '1.5s',
                   }} 
                 />
@@ -1026,7 +1010,7 @@ function Dashboard() {
               sx={{ 
                 p: 3,
                 borderBottom: '1px solid rgba(0,0,0,0.06)',
-                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)',
                 color: 'white',
               }}
             >

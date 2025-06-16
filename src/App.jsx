@@ -28,7 +28,7 @@ const theme = createTheme({
       paper: '#132f4c', // Darker blue
     },
     text: {
-      primary: '#fff',
+      primary: '#f4f4f4', // White text
       secondary: 'rgba(255, 255, 255, 0.7)',
     },
   },
@@ -37,14 +37,14 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           // background: 'linear-gradient(45deg, #0284C7 30%, #173a5e 90%)',
-          background: '#0284C7', //nav
+          background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)', //nav
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          background: 'linear-gradient(45deg, #0284C7 30%, #0284C7 90%)',
+          background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)',
         },
       },
     },
@@ -54,8 +54,8 @@ const theme = createTheme({
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ 
-        bgcolor: '  ', 
+      <Box sx={{
+        bgcolor: 'background.default',
         minHeight: '100vh',
         color: 'white',
         display: 'flex',
