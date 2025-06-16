@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import {
   CloudUpload, Close, PictureAsPdf, Image as ImageIcon, Article,
-  VideoLibrary, Delete, Download, Visibility, Search, Upload
+  VideoLibrary, Delete, Download, Visibility, Search, Upload, Add
 } from "@mui/icons-material";
 import { db } from "../config/firebase";
 import {
@@ -18,8 +18,6 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
-import { motion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
 
 const CLOUDINARY_CLOUD_NAME = "dw1p4jkjb";
 const CLOUDINARY_UPLOAD_PRESET = "ml_default";
@@ -28,7 +26,6 @@ const categories = ["Computer Science", "Information Technology", "Science", "Ma
 const PDFViewer = ({ fileUrl }) => {
   const iframeRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
-
   const pdfUrl = `https://docs.google.com/viewerng/viewer?url=${encodeURIComponent(fileUrl)}&chrome=false&embedded=true`;
 
   const onIframeLoaded = useCallback(() => setLoaded(true), []);
@@ -44,7 +41,6 @@ const PDFViewer = ({ fileUrl }) => {
         clearInterval(checkIframe);
       }
     }, 1000);
-
     return () => clearInterval(checkIframe);
   }, [pdfUrl, onIframeLoaded]);
 
@@ -52,25 +48,11 @@ const PDFViewer = ({ fileUrl }) => {
     <Box sx={{ width: "100%", height: "70vh", position: "relative" }}>
       {!loaded && (
         <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
-          <CircularProgress sx={{ color: '#667eea' }} />
+          <CircularProgress />
         </Box>
       )}
       <iframe ref={iframeRef} src={pdfUrl} width="100%" height="100%" style={{ border: "none" }} title="PDF Viewer" onLoad={onIframeLoaded} />
     </Box>
-  );
-};
-
-const AnimatedCard = ({ children, index }) => {
-  const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.1 });
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-      transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
-    >
-      {children}
-    </motion.div>
   );
 };
 
@@ -92,7 +74,6 @@ export default function Resources() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
   const [expandedCollection, setExpandedCollection] = useState(null);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -245,10 +226,10 @@ export default function Resources() {
   };
 
   const getFileIcon = (fileType) => {
-    if (fileType.includes("pdf")) return <PictureAsPdf sx={{ color: '#667eea' }} />;
-    if (fileType.includes("image")) return <ImageIcon sx={{ color: '#667eea' }} />;
-    if (fileType.includes("video")) return <VideoLibrary sx={{ color: '#667eea' }} />;
-    return <Article sx={{ color: '#667eea' }} />;
+    if (fileType.includes("pdf")) return <PictureAsPdf />;
+    if (fileType.includes("image")) return <ImageIcon />;
+    if (fileType.includes("video")) return <VideoLibrary />;
+    return <Article />;
   };
 
   const PreviewDialog = ({ open, onClose, file }) => {
@@ -259,10 +240,16 @@ export default function Resources() {
     const isVideo = /video\/(mp4|webm|ogg)/.test(file.fileType);
 
     return (
-      <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-        <DialogTitle sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-          {file.fileName}
-          <IconButton onClick={onClose} sx={{ position: "absolute", right: 8, top: 8, color: 'white' }}>
+      <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth sx={{ '& .MuiDialog-paper': { borderRadius: 3 } }}>
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)', 
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Typography variant="h6">{file.fileName}</Typography>
+          <IconButton onClick={onClose} sx={{ color: 'white' }}>
             <Close />
           </IconButton>
         </DialogTitle>
@@ -272,10 +259,15 @@ export default function Resources() {
             {isPDF && <PDFViewer fileUrl={file.fileUrl} />}
             {isVideo && <video controls style={{ maxWidth: "100%", maxHeight: "70vh" }}><source src={file.fileUrl} type={file.fileType} /></video>}
             {!isImage && !isPDF && !isVideo && (
-              <Box sx={{ textAlign: "center" }}>
-                <Article sx={{ fontSize: 60, mb: 2, color: '#667eea' }} />
-                <Typography>Preview not available</Typography>
-                <Button onClick={() => window.open(file.fileUrl, "_blank")} startIcon={<Download />} sx={{ mt: 2 }}>
+              <Box sx={{ textAlign: "center", p: 4 }}>
+                <Article sx={{ fontSize: 60, mb: 2, color: '#666' }} />
+                <Typography color="text.secondary" sx={{ mb: 2 }}>Preview not available</Typography>
+                <Button 
+                  onClick={() => window.open(file.fileUrl, "_blank")} 
+                  startIcon={<Download />} 
+                  variant="contained"
+                  sx={{ background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)' }}
+                >
                   Download to view
                 </Button>
               </Box>
@@ -290,47 +282,99 @@ export default function Resources() {
     if (!collection) return null;
 
     return (
-      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Typography variant="h5" sx={{ color: 'white' }}>{collection.title}</Typography>
-            <IconButton onClick={onClose} sx={{ color: 'white' }}>
-              <Close />
-            </IconButton>
-          </Box>
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth sx={{ '& .MuiDialog-paper': { borderRadius: 3 } }}>
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)', 
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Typography variant="h5">{collection.title}</Typography>
+          <IconButton onClick={onClose} sx={{ color: 'white' }}>
+            <Close />
+          </IconButton>
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
           {collection.thumbnailUrl && (
-            <Box component="img" src={collection.thumbnailUrl} alt={collection.title}
-                 sx={{ width: "100%", maxHeight: "200px", objectFit: "contain", borderRadius: 2, mb: 2 }}
-                 onError={(e) => { e.target.style.display = "none"; }} />
+            <Box 
+              component="img" 
+              src={collection.thumbnailUrl} 
+              alt={collection.title}
+              sx={{ 
+                width: "100%", 
+                maxHeight: "200px", 
+                objectFit: "cover", 
+                borderRadius: 2, 
+                mb: 3,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+              }}
+              onError={(e) => { e.target.style.display = "none"; }} 
+            />
           )}
-          <Typography variant="body1" paragraph>{collection.description}</Typography>
           
-          <Typography variant="h6" gutterBottom sx={{ color: '#667eea', fontWeight: 600 }}>Files</Typography>
-          <List>
+          <Typography variant="body1" paragraph sx={{ color: '#555', lineHeight: 1.6 }}>
+            {collection.description}
+          </Typography>
+          
+          <Typography variant="h6" gutterBottom sx={{ color: '#0062ff', fontWeight: 600, mb: 2 }}>
+            Files ({collection.files.length})
+          </Typography>
+          
+          <Box sx={{ bgcolor: '#f8f9ff', borderRadius: 2, p: 2 }}>
             {collection.files.map((file, index) => (
-              <ListItem key={index} sx={{ borderRadius: 1, mb: 1, bgcolor: 'rgba(102, 126, 234, 0.05)' }}
-                        secondaryAction={
-                          <Box>
-                            <IconButton onClick={(e) => handlePreview(file, e)} sx={{ color: '#667eea' }}>
-                              <Visibility />
-                            </IconButton>
-                            <IconButton onClick={(e) => handleFileDownload(file, e)} sx={{ color: '#667eea' }}>
-                              <Download />
-                            </IconButton>
-                          </Box>
-                        }>
-                <ListItemIcon>{getFileIcon(file.fileType)}</ListItemIcon>
-                <ListItemText primary={file.fileName} secondary={`${(file.size / 1024 / 1024).toFixed(2)} MB`} />
-              </ListItem>
+              <Box 
+                key={index}
+                sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  p: 2,
+                  mb: index < collection.files.length - 1 ? 1 : 0,
+                  bgcolor: 'white',
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                  '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }
+                }}
+              >
+                <Box sx={{ mr: 2, color: '#0062ff' }}>
+                  {getFileIcon(file.fileType)}
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{file.fileName}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </Typography>
+                </Box>
+                <Box>
+                  <IconButton onClick={(e) => handlePreview(file, e)} size="small" sx={{ mr: 1 }}>
+                    <Visibility />
+                  </IconButton>
+                  <IconButton onClick={(e) => handleFileDownload(file, e)} size="small">
+                    <Download />
+                  </IconButton>
+                </Box>
+              </Box>
             ))}
-          </List>
+          </Box>
 
-          <Box sx={{ mt: 2, p: 2, borderRadius: 2, bgcolor: 'rgba(102, 126, 234, 0.05)' }}>
-            <Typography variant="body2" color="text.secondary">Category: {collection.category}</Typography>
-            <Typography variant="body2" color="text.secondary">Shared by: {collection.uploaderName}</Typography>
-            <Typography variant="body2" color="text.secondary">Date: {collection.createdAt?.toLocaleDateString()}</Typography>
+          <Box sx={{ mt: 3, p: 2, borderRadius: 2, bgcolor: '#f0f8ff', border: '1px solid #e0f0ff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Chip 
+                label={collection.category} 
+                size="small" 
+                sx={{ 
+                  background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)',
+                  color: 'white',
+                  fontWeight: 500
+                }} 
+              />
+              <Typography variant="body2" color="text.secondary">
+                {collection.createdAt?.toLocaleDateString()}
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Shared by {collection.uploaderName}
+            </Typography>
           </Box>
         </DialogContent>
       </Dialog>
@@ -338,196 +382,439 @@ export default function Resources() {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: '#fafbff' }}>
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Header */}
-        <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Typography variant="h3" sx={{ 
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent',
-            fontWeight: 700
-          }}>
-            Resources
-          </Typography>
-          
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            {searchOpen ? (
-              <Paper sx={{ p: '8px 16px', display: 'flex', alignItems: 'center', width: 300, borderRadius: 3 }}>
-                <InputBase placeholder="Search resources..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} autoFocus
-                           endAdornment={<IconButton size="small" onClick={() => { setSearchOpen(false); setSearchQuery(""); }}><Close /></IconButton>} />
-              </Paper>
-            ) : (
-              <IconButton onClick={() => setSearchOpen(true)} sx={{ 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white',
-                '&:hover': { transform: 'scale(1.05)' }
-              }}>
-                <Search />
+        <Box sx={{ mb: 6 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
+            <Typography 
+              variant="h3" 
+              sx={{ 
+                background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)',
+                backgroundClip: 'text', 
+                WebkitBackgroundClip: 'text', 
+                color: 'transparent',
+                fontWeight: 700,
+                fontSize: { xs: '2rem', md: '3rem' }
+              }}
+            >
+              Resources
+            </Typography>
+            
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Button 
+                variant="outlined" 
+                onClick={() => navigate('/uploads')}
+                sx={{ 
+                  borderColor: '#0062ff', 
+                  color: '#0062ff', 
+                  borderRadius: 2,
+                  px: 3,
+                  '&:hover': { 
+                    borderColor: '#00c6ff', 
+                    color: '#00c6ff',
+                    transform: 'translateY(-1px)'
+                  }
+                }}
+              >
+                My Uploads
+              </Button>
+              
+              <Button 
+                variant="contained" 
+                onClick={() => setOpenUpload(true)} 
+                startIcon={<Add />}
+                sx={{
+                  background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)', 
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1,
+                  boxShadow: '0 4px 15px rgba(0, 98, 255, 0.3)',
+                  '&:hover': { 
+                    transform: 'translateY(-1px)', 
+                    boxShadow: '0 6px 20px rgba(0, 98, 255, 0.4)' 
+                  }
+                }}
+              >
+                Upload
+              </Button>
+            </Box>
+          </Box>
+
+          {/* Search */}
+          <Paper 
+            sx={{ 
+              background: '#f0f8ff',
+              p: 2, 
+              display: 'flex', 
+              alignItems: 'center', 
+              maxWidth: 600,
+              borderRadius: 3,
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+              border: '1px solidrgb(241, 245, 248)'
+            }}
+          >
+            <Search sx={{ color: '#0062ff', mr: 2 }} />
+            <InputBase 
+              placeholder="Search resources by title, description, or category..." 
+              value={searchQuery} 
+              onChange={(e) => setSearchQuery(e.target.value)}
+              sx={{ flex: 1, color: '#1a1a1a' }}
+            />
+            {searchQuery && (
+              <IconButton size="small" onClick={() => setSearchQuery("")}>
+                <Close />
               </IconButton>
             )}
-            
-            <Button variant="outlined" onClick={() => navigate('/uploads')} sx={{ 
-              borderColor: '#667eea', color: '#667eea', borderRadius: 3,
-              '&:hover': { borderColor: '#764ba2', color: '#764ba2', transform: 'translateY(-2px)' }
-            }}>
-              My Uploads
-            </Button>
-            
-            <Button variant="contained" onClick={() => setOpenUpload(true)} startIcon={<CloudUpload />} sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: 3,
-              '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)' }
-            }}>
-              Upload
-            </Button>
-          </Box>
+          </Paper>
         </Box>
 
         {/* Content */}
         {isLoading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", my: 8 }}>
-            <CircularProgress sx={{ color: '#667eea' }} size={60} />
+          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+            <CircularProgress size={60} sx={{ color: '#0062ff' }} />
           </Box>
         ) : filteredResources.length === 0 ? (
           <Box sx={{ textAlign: "center", py: 8 }}>
-            <Typography variant="h5" color="text.secondary">No resources found</Typography>
+            <Article sx={{ fontSize: 80, color: '#ccc', mb: 2 }} />
+            <Typography variant="h5" color="text.secondary" sx={{ mb: 1 }}>
+              No resources found
+            </Typography>
+            <Typography color="text.secondary">
+              {searchQuery ? 'Try adjusting your search terms' : 'Be the first to upload a resource!'}
+            </Typography>
           </Box>
         ) : (
-          <Stack spacing={2}>
+          <Box sx={{ display: 'grid', gap: 3 }}>
             {filteredResources.map((collection, index) => (
-              <AnimatedCard index={index} key={collection.title}>
-                <Card onClick={() => setExpandedCollection(collection)} sx={{
-                  display: "flex", cursor: "pointer", borderRadius: 3, overflow: "hidden", background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)', height: "160px",
-                  transition: "all 0.3s ease",
-                  '&:hover': { transform: "translateY(-4px)", boxShadow: '0 8px 30px rgba(0,0,0,0.12)' }
-                }}>
-                  <Box sx={{ width: '200px', position: 'relative', overflow: 'hidden' }}>
-                    {collection.thumbnailUrl ? (
-                      <Box component="img" src={collection.thumbnailUrl} alt={collection.title}
-                           sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                           onError={(e) => { e.target.style.display = 'none'; }} />
-                    ) : (
-                      <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-                        <Article sx={{ fontSize: 40, color: 'white' }} />
-                      </Box>
-                    )}
+              <Card 
+                key={collection.id || index}
+                onClick={() => setExpandedCollection(collection)} 
+                sx={{
+                  display: "flex", 
+                  cursor: "pointer", 
+                  borderRadius: 3, 
+                  overflow: "hidden",
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)', 
+                  height: "180px",
+                  border: '1px solid #f0f0f0',
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  '&:hover': { 
+                    transform: "translateY(-4px)", 
+                    boxShadow: '0 12px 40px rgba(0,98,255,0.15)',
+                    borderColor: '#0062ff'
+                  }
+                }}
+              >
+                {/* Thumbnail */}
+                <Box sx={{ width: '240px', position: 'relative', overflow: 'hidden' }}>
+                  {collection.thumbnailUrl ? (
+                    <Box 
+                      component="img" 
+                      src={collection.thumbnailUrl} 
+                      alt={collection.title}
+                      sx={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover',
+                        transition: 'transform 0.3s ease'
+                      }}
+                      onError={(e) => { e.target.style.display = 'none'; }} 
+                    />
+                  ) : (
+                    <Box sx={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)'
+                    }}>
+                      <Article sx={{ fontSize: 48, color: 'white' }} />
+                    </Box>
+                  )}
+                  
+                  {/* File count badge */}
+                  <Chip 
+                    label={`${collection.files.length} files`}
+                    size="small"
+                    sx={{
+                      position: 'absolute',
+                      color: '#0062ff',
+                      top: 12,
+                      right: 12,
+                      background: 'rgba(255,255,255,0.9)',
+                      backdropFilter: 'blur(10px)',
+                      fontWeight: 600
+                    }}
+                  />
+                </Box>
+
+                {/* Content */}
+                <Box sx={{ p: 3, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <Box>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        fontWeight: 600, 
+                        color: '#1a1a1a',
+                        mb: 1,
+                        lineHeight: 1.3
+                      }}
+                    >
+                      {collection.title}
+                    </Typography>
+                    <Typography 
+                      color="text.secondary" 
+                      sx={{
+                        overflow: "hidden", 
+                        textOverflow: "ellipsis", 
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2, 
+                        WebkitBoxOrient: "vertical",
+                        lineHeight: 1.5,
+                        fontSize: '0.95rem'
+                      }}
+                    >
+                      {collection.description || 'No description provided'}
+                    </Typography>
                   </Box>
 
-                  <Box sx={{ p: 3, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                    <Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 600, color: '#2d3748' }}>
-                          {collection.title}
-                        </Typography>
-                        <Chip label={`${collection.files.length} Files`} size="small" sx={{
-                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white'
-                        }} />
-                      </Box>
-                      <Typography color="text.secondary" sx={{
-                        overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box",
-                        WebkitLineClamp: 2, WebkitBoxOrient: "vertical"
-                      }}>
-                        {collection.description || 'No description provided'}
-                      </Typography>
-                    </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                    <Chip 
+                      label={collection.category} 
+                      size="small" 
+                      sx={{
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Chip label={collection.category} size="small" variant="outlined" sx={{
-                        borderColor: '#fff', color: '#fff'
-                      }} />
-                      <Typography variant="body2" color="text.secondary">
-                        by {collection.uploaderName}
-                      </Typography>
-                    </Box>
+                        border: '1.5px solid #fff',
+                        color: 'white',
+                        fontWeight: 500,
+                        fontSize: '0.8rem'
+                      }}
+                    />
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                      by {collection.uploaderName}
+                    </Typography>
                   </Box>
-                </Card>
-              </AnimatedCard>
+                </Box>
+              </Card>
             ))}
-          </Stack>
+          </Box>
         )}
 
         {/* Dialogs */}
-        <ExpandedViewDialog collection={expandedCollection} open={Boolean(expandedCollection)} onClose={() => setExpandedCollection(null)} />
-        <PreviewDialog open={previewOpen} onClose={() => { setPreviewOpen(false); setPreviewFile(null); }} file={previewFile} />
+        <ExpandedViewDialog 
+          collection={expandedCollection} 
+          open={Boolean(expandedCollection)} 
+          onClose={() => setExpandedCollection(null)} 
+        />
+        <PreviewDialog 
+          open={previewOpen} 
+          onClose={() => { setPreviewOpen(false); setPreviewFile(null); }} 
+          file={previewFile} 
+        />
 
         {/* Upload Dialog */}
-        <Dialog open={openUpload} onClose={() => !isUploading && setOpenUpload(false)} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-            Upload Resources
+        <Dialog 
+          open={openUpload} 
+          onClose={() => !isUploading && setOpenUpload(false)} 
+          maxWidth="sm" 
+          fullWidth
+          sx={{ '& .MuiDialog-paper': { borderRadius: 3 } }}
+        >
+          <DialogTitle sx={{ 
+            background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)', 
+            color: 'white',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <Typography variant="h6">Upload Resources</Typography>
+            <IconButton onClick={() => !isUploading && setOpenUpload(false)} sx={{ color: 'white' }}>
+              <Close />
+            </IconButton>
           </DialogTitle>
           <DialogContent sx={{ p: 3 }}>
             <Box component="form" onSubmit={handleFileUpload} sx={{ mt: 1 }}>
-              <TextField fullWidth label="Title" value={uploadForm.title} required sx={{ mb: 2 }}
-                         onChange={(e) => setUploadForm(prev => ({ ...prev, title: e.target.value }))} />
+              <TextField 
+                fullWidth 
+                label="Title" 
+                value={uploadForm.title} 
+                required 
+                sx={{ mb: 3 }}
+                onChange={(e) => setUploadForm(prev => ({ ...prev, title: e.target.value }))} 
+              />
               
-              <TextField fullWidth label="Description" value={uploadForm.description} multiline rows={3} sx={{ mb: 2 }}
-                         onChange={(e) => setUploadForm(prev => ({ ...prev, description: e.target.value }))} />
+              <TextField 
+                fullWidth 
+                label="Description" 
+                value={uploadForm.description} 
+                multiline 
+                rows={3} 
+                sx={{ mb: 3 }}
+                onChange={(e) => setUploadForm(prev => ({ ...prev, description: e.target.value }))} 
+              />
               
-              <TextField select fullWidth label="Category" value={uploadForm.category} sx={{ mb: 2 }}
-                         onChange={(e) => setUploadForm(prev => ({ ...prev, category: e.target.value }))}>
+              <TextField 
+                select 
+                fullWidth 
+                label="Category" 
+                value={uploadForm.category} 
+                sx={{ mb: 3 }}
+                onChange={(e) => setUploadForm(prev => ({ ...prev, category: e.target.value }))}
+              >
                 {categories.map((category) => (
                   <MenuItem key={category} value={category}>{category}</MenuItem>
                 ))}
               </TextField>
 
-              <input accept="image/*" style={{ display: "none" }} id="thumbnail-upload" type="file" onChange={handleThumbnailSelect} />
+              <input 
+                accept="image/*" 
+                style={{ display: "none" }} 
+                id="thumbnail-upload" 
+                type="file" 
+                onChange={handleThumbnailSelect} 
+              />
               <label htmlFor="thumbnail-upload">
-                <Button variant="outlined" component="span" startIcon={<ImageIcon />} fullWidth sx={{ mb: 2 }}>
+                <Button 
+                  variant="outlined" 
+                  component="span" 
+                  startIcon={<ImageIcon />} 
+                  fullWidth 
+                  sx={{ mb: 2, borderRadius: 2 }}
+                >
                   Upload Thumbnail
                 </Button>
               </label>
               
               {uploadForm.thumbnailPreview && (
                 <Box sx={{ mb: 2, position: "relative" }}>
-                  <img src={uploadForm.thumbnailPreview} alt="Preview" style={{ width: "100%", maxHeight: "150px", objectFit: "contain", borderRadius: "8px" }} />
-                  <IconButton sx={{ position: "absolute", top: 4, right: 4, bgcolor: "rgba(0,0,0,0.5)" }}
-                              onClick={() => setUploadForm(prev => ({ ...prev, thumbnail: null, thumbnailPreview: null }))}>
+                  <img 
+                    src={uploadForm.thumbnailPreview} 
+                    alt="Preview" 
+                    style={{ 
+                      width: "100%", 
+                      maxHeight: "150px", 
+                      objectFit: "contain", 
+                      borderRadius: "8px" 
+                    }} 
+                  />
+                  <IconButton 
+                    sx={{ 
+                      position: "absolute", 
+                      top: 8, 
+                      right: 8, 
+                      bgcolor: "rgba(0,0,0,0.7)",
+                      '&:hover': { bgcolor: "rgba(0,0,0,0.8)" }
+                    }}
+                    onClick={() => setUploadForm(prev => ({ ...prev, thumbnail: null, thumbnailPreview: null }))}
+                  >
                     <Close sx={{ color: "white" }} />
                   </IconButton>
                 </Box>
               )}
 
-              <input type="file" multiple onChange={handleFileSelect} style={{ display: "none" }} id="file-input" />
+              <input 
+                type="file" 
+                multiple 
+                onChange={handleFileSelect} 
+                style={{ display: "none" }} 
+                id="file-input" 
+              />
               <label htmlFor="file-input">
-                <Button variant="outlined" component="span" startIcon={<Upload />} fullWidth sx={{ mb: 2 }}>
+                <Button 
+                  variant="outlined" 
+                  component="span" 
+                  startIcon={<Upload />} 
+                  fullWidth 
+                  sx={{ mb: 2, borderRadius: 2 }}
+                >
                   Select Files
                 </Button>
               </label>
 
               {selectedFiles.length > 0 && (
-                <Box sx={{ mb: 2, maxHeight: 200, overflow: 'auto' }}>
-                  <Typography variant="subtitle2" gutterBottom>Selected Files ({selectedFiles.length}):</Typography>
-                  <List dense>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                    Selected Files ({selectedFiles.length}):
+                  </Typography>
+                  <Box sx={{ maxHeight: 200, overflow: 'auto', bgcolor: '#f8f9ff', borderRadius: 2, p: 1 }}>
                     {selectedFiles.map((file, index) => (
-                      <ListItem key={index} sx={{ bgcolor: 'rgba(102, 126, 234, 0.05)', mb: 1, borderRadius: 1 }}
-                                secondaryAction={
-                                  <IconButton size="small" onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== index))}>
-                                    <Close />
-                                  </IconButton>
-                                }>
-                        <ListItemIcon>{getFileIcon(file.type)}</ListItemIcon>
-                        <ListItemText primary={file.name} secondary={`${(file.size / 1024 / 1024).toFixed(2)} MB`} />
-                      </ListItem>
+                      <Box 
+                        key={index}
+                        sx={{ 
+                          display: 'flex',
+                          alignItems: 'center',
+                          p: 1.5,
+                          mb: 1,
+                          bgcolor: 'white',
+                          borderRadius: 1,
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                        }}
+                      >
+                        <Box sx={{ mr: 2 }}>{getFileIcon(file.type)}</Box>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>{file.name}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </Typography>
+                        </Box>
+                        <IconButton 
+                          size="small" 
+                          onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== index))}
+                        >
+                          <Close />
+                        </IconButton>
+                      </Box>
                     ))}
-                  </List>
+                  </Box>
                 </Box>
               )}
 
               {isUploading && (
-                <Box sx={{ mb: 2 }}>
-                  <LinearProgress variant="determinate" value={uploadProgress} sx={{
-                    '& .MuiLinearProgress-bar': { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }
-                  }} />
-                  <Typography variant="caption" sx={{ mt: 1, color: '#667eea' }}>
+                <Box sx={{ mb: 3 }}>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={uploadProgress} 
+                    sx={{
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: '#e0f0ff',
+                      '& .MuiLinearProgress-bar': { 
+                        background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)',
+                        borderRadius: 4
+                      }
+                    }} 
+                  />
+                  <Typography variant="body2" sx={{ mt: 1, color: '#0062ff', textAlign: 'center' }}>
                     Uploading... {Math.round(uploadProgress)}%
                   </Typography>
                 </Box>
               )}
 
-              <Button type="submit" variant="contained" fullWidth disabled={isUploading || !selectedFiles.length || !uploadForm.title} sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                '&:hover': { transform: 'translateY(-2px)' }
-              }}>
+              <Button 
+                type="submit" 
+                variant="contained" 
+                fullWidth 
+                disabled={isUploading || !selectedFiles.length || !uploadForm.title} 
+                sx={{
+                  background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)',
+                  py: 1.5,
+                  borderRadius: 2,
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  boxShadow: '0 4px 15px rgba(0, 98, 255, 0.3)',
+                  '&:hover': { 
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 6px 20px rgba(0, 98, 255, 0.4)'
+                  },
+                  '&:disabled': {
+                    background: '#ccc',
+                    transform: 'none',
+                    boxShadow: 'none'
+                  }
+                }}
+              >
                 {isUploading ? "Uploading..." : "Upload Files"}
               </Button>
             </Box>
