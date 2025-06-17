@@ -1,10 +1,20 @@
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
+import dotenv from 'dotenv';
+dotenv.config({ path: '../.env' });  // Explicitly point to the .env file in the parent directory
 
+import express from 'express';
+import http from 'http';
+import { Server } from 'socket.io';
+import cors from 'cors';
+
+const port = process.env.PORT || 5000;
 const app = express();
-app.use(cors());
+
+app.use(express.json());
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true, 
+}
+))
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -43,7 +53,6 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+server.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
