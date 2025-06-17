@@ -24,7 +24,7 @@ const theme = createTheme({
       main: '#81c784', // Lighter green
     },
     background: {
-      default: '#0a1929', // Dark blue-black
+      default: '#fff', // white background for the app
       paper: '#132f4c', // Darker blue
     },
     text: {
