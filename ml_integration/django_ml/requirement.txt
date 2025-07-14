@@ -1,0 +1,9 @@
+django
+djangorestframework
+langchain
+langchain_huggingface
+chromadb
+sentence-transformers
+pandas
+numpy
+python-dotenv
