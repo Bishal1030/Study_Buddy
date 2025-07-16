@@ -1,4 +1,4 @@
-ChatWindow import React, { useState } from "react";
+import React, { useState } from "react";
 import { IoSend } from "react-icons/io5";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 

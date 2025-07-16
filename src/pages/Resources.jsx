@@ -19,6 +19,7 @@ import { useAuth } from "../contexts/AuthContext";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
+
 const CLOUDINARY_CLOUD_NAME = "dw1p4jkjb";
 const CLOUDINARY_UPLOAD_PRESET = "ml_default";
 const categories = ["Computer Science", "Information Technology", "Science", "Mathematics", "Engineering", "Other"];
@@ -232,51 +233,81 @@ export default function Resources() {
     return <Article />;
   };
 
-  const PreviewDialog = ({ open, onClose, file }) => {
-    if (!file) return null;
+ const PreviewDialog = ({ open, onClose, file }) => {
+  if (!file) return null;
 
-    const isImage = /image\/(jpeg|jpg|png|gif|webp)/.test(file.fileType);
-    const isPDF = file.fileType.includes("pdf");
-    const isVideo = /video\/(mp4|webm|ogg)/.test(file.fileType);
+  const isImage = /image\/(jpeg|jpg|png|gif|webp)/.test(file.fileType);
+  const isPDF = file.fileType.includes("pdf");
+  const isVideo = /video\/(mp4|webm|ogg)/.test(file.fileType);
+  const isAudio = /audio\/(mp3|wav|ogg|aac)/.test(file.fileType);
+  const isDocOffice = /\.(docx|pptx|xlsx|xls)$/i.test(file.fileName);
 
-    return (
-      <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth sx={{ '& .MuiDialog-paper': { borderRadius: 3 } }}>
-        <DialogTitle sx={{ 
-          background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)', 
-          color: 'white',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <Typography variant="h6">{file.fileName}</Typography>
-          <IconButton onClick={onClose} sx={{ color: 'white' }}>
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ p: 0 }}>
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "50vh" }}>
-            {isImage && <img src={file.fileUrl} alt={file.fileName} style={{ maxWidth: "100%", maxHeight: "70vh", objectFit: "contain" }} />}
-            {isPDF && <PDFViewer fileUrl={file.fileUrl} />}
-            {isVideo && <video controls style={{ maxWidth: "100%", maxHeight: "70vh" }}><source src={file.fileUrl} type={file.fileType} /></video>}
-            {!isImage && !isPDF && !isVideo && (
-              <Box sx={{ textAlign: "center", p: 4 }}>
-                <Article sx={{ fontSize: 60, mb: 2, color: '#666' }} />
-                <Typography color="text.secondary" sx={{ mb: 2 }}>Preview not available</Typography>
-                <Button 
-                  onClick={() => window.open(file.fileUrl, "_blank")} 
-                  startIcon={<Download />} 
-                  variant="contained"
-                  sx={{ background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)' }}
-                >
-                  Download to view
-                </Button>
-              </Box>
-            )}
-          </Box>
-        </DialogContent>
-      </Dialog>
-    );
-  };
+  const docViewerUrl = `https://docs.google.com/viewerng/viewer?url=${encodeURIComponent(file.fileUrl)}&embedded=true`;
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth sx={{ '& .MuiDialog-paper': { borderRadius: 3 } }}>
+      <DialogTitle sx={{ 
+        background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)', 
+        color: 'white',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <Typography variant="h6">{file.fileName}</Typography>
+        <IconButton onClick={onClose} sx={{ color: 'white' }}>
+          <Close />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent sx={{ p: 0 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
+          {isImage && (
+            <img src={file.fileUrl} alt={file.fileName} style={{ maxWidth: "100%", maxHeight: "70vh", objectFit: "contain" }} />
+          )}
+          {isPDF && (
+            <PDFViewer fileUrl={file.fileUrl} />
+          )}
+          {isVideo && (
+            <video controls style={{ maxWidth: "100%", maxHeight: "70vh" }}>
+              <source src={file.fileUrl} type={file.fileType} />
+              Your browser does not support the video tag.
+            </video>
+          )}
+          {isAudio && (
+            <audio controls style={{ width: "100%" }}>
+              <source src={file.fileUrl} type={file.fileType} />
+              Your browser does not support the audio element.
+            </audio>
+          )}
+          {isDocOffice && (
+            <iframe
+              src={docViewerUrl}
+              width="100%"
+              height="600px"
+              title="Office File Preview"
+              style={{ border: "none" }}
+            />
+          )}
+          {!isImage && !isPDF && !isVideo && !isAudio && !isDocOffice && (
+            <Box sx={{ textAlign: "center", p: 4 }}>
+              <Article sx={{ fontSize: 60, mb: 2, color: '#666' }} />
+              <Typography color="text.secondary" sx={{ mb: 2 }}>Preview not available</Typography>
+              <Button 
+                onClick={() => window.open(file.fileUrl, "_blank")} 
+                startIcon={<Download />} 
+                variant="contained"
+                sx={{ background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)' }}
+              >
+                Download to view
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 
   const ExpandedViewDialog = ({ collection, open, onClose }) => {
     if (!collection) return null;
