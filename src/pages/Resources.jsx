@@ -8,7 +8,8 @@ import {
 } from "@mui/material";
 import {
   CloudUpload, Close, PictureAsPdf, Image as ImageIcon, Article,
-  VideoLibrary, Delete, Download, Visibility, Search, Upload, Add
+  VideoLibrary, Delete, Download, Visibility, Search, Upload, Add,
+  Book
 } from "@mui/icons-material";
 import { db } from "../config/firebase";
 import {
@@ -469,6 +470,24 @@ export default function Resources() {
               >
                 Upload
               </Button>
+              <Button 
+                variant="contained" 
+                onClick={() => navigate('/recommend')} 
+                startIcon={<Book />}
+                sx={{
+                  background: 'linear-gradient(45deg, #0062ff 20%, #00c6ff 90%)', 
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1,
+                  boxShadow: '0 4px 15px rgba(0, 98, 255, 0.3)',
+                  '&:hover': { 
+                    transform: 'translateY(-1px)', 
+                    boxShadow: '0 6px 20px rgba(0, 98, 255, 0.4)' 
+                  }
+                }}
+              >
+                Recommend Resources
+              </Button>
             </Box>
           </Box>
 
@@ -709,6 +728,7 @@ export default function Resources() {
               <label htmlFor="thumbnail-upload">
                 <Button 
                   variant="outlined" 
+                  color="#ffffff"
                   component="span" 
                   startIcon={<ImageIcon />} 
                   fullWidth 
@@ -755,6 +775,7 @@ export default function Resources() {
               <label htmlFor="file-input">
                 <Button 
                   variant="outlined" 
+                  color="#ffffff"
                   component="span" 
                   startIcon={<Upload />} 
                   fullWidth 
@@ -841,6 +862,7 @@ export default function Resources() {
                   },
                   '&:disabled': {
                     background: '#ccc',
+                    color: '#666',
                     transform: 'none',
                     boxShadow: 'none'
                   }
