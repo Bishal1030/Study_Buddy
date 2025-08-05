@@ -12,6 +12,7 @@ import Uploads from './pages/Uploads';
 import Profile from './pages/Profile';
 import { ThemeProvider, createTheme, Box, Typography } from '@mui/material';
 import Footer from './components/Footer';
+import Recommender from './contexts/Recommender';
 
 const theme = createTheme({
   palette: {
@@ -83,6 +84,14 @@ function App() {
                     element={
                       <PrivateRoute>
                         <Resources />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/recommend" 
+                    element={
+                      <PrivateRoute>
+                        <Recommender />
                       </PrivateRoute>
                     } 
                   />
